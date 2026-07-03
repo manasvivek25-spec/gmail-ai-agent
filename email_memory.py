@@ -335,7 +335,7 @@ def record_action(
     VALUES (
         %s,
         %s,
-        datetime('now')
+        CURRENT_TIMESTAMP
     )
     """,
     (
