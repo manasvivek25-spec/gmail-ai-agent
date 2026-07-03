@@ -9,11 +9,16 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar"
 ]
 
+import json
+
 def get_calendar_service():
 
     creds = None
 
-    if os.path.exists("calendar_token.json"):
+    token_json = os.environ.get("CALENDAR_TOKEN_JSON")
+    if token_json:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+    elif os.path.exists("calendar_token.json"):
 
         creds = Credentials.from_authorized_user_file(
             "calendar_token.json",
@@ -41,14 +46,15 @@ def get_calendar_service():
 
             creds = flow.run_local_server(port=0)
 
-        with open(
-            "calendar_token.json",
-            "w"
-        ) as token:
+        if not token_json:
+            with open(
+                "calendar_token.json",
+                "w"
+            ) as token:
 
-            token.write(
-                creds.to_json()
-            )
+                token.write(
+                    creds.to_json()
+                )
 
     service = build(
         "calendar",

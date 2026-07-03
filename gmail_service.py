@@ -11,11 +11,16 @@ SCOPES = [
     'https://www.googleapis.com/auth/gmail.send'
 ]
 
+import json
+
 def get_gmail_service():
 
     creds = None
 
-    if os.path.exists("token.json"):
+    token_json = os.environ.get("GMAIL_TOKEN_JSON")
+    if token_json:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+    elif os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file(
             "token.json",
             SCOPES
@@ -38,8 +43,10 @@ def get_gmail_service():
 
             creds = flow.run_local_server(port=0)
 
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
+        # Only save to file if not using env vars
+        if not token_json:
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
 
     service = build(
         "gmail",
