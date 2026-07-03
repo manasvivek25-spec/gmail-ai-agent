@@ -150,8 +150,10 @@ import time
 for email in emails:
 
     if processed_count >= 5:
-        print("Batch limit reached (5). Waiting for next cycle to respect rate limits.")
-        break
+        print("Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.")
+        ai_limit_reached = True
+    else:
+        ai_limit_reached = False
 
     if email_exists(email["id"]):
 
@@ -167,53 +169,70 @@ for email in emails:
     if processed_count > 0:
         time.sleep(3)
 
-    try:
-        # AI Analysis
-        result = analyze_email(
-            email["subject"],
-            email["body"][:3000]
-        )
-        
-        processed_count += 1
-        
-        for tag in result.get("tags", []):
-            save_tag(email["id"], tag)
+        # Default values in case AI fails or is rate limited
+        ai_category = "Uncategorized"
+        ai_summary = "AI Analysis Pending / Skipped"
+        ai_deadline = "NONE"
+        ai_relevance = 0
+        ai_importance = 0
+        ai_action = "NONE"
 
-        print("\nAI RESULT:")
-        print(result)
+        if not ai_limit_reached:
+            try:
+                # AI Analysis
+                result = analyze_email(
+                    email["subject"],
+                    email["body"][:3000]
+                )
+                
+                processed_count += 1
+                
+                for tag in result.get("tags", []):
+                    save_tag(email["id"], tag)
 
-        # Calendar Integration
-        if result["deadline"] != "NONE" and result["deadline"] != "":
-            if not event_exists(email["id"]):
-                try:
-                    create_event(calendar_service, email["subject"], result["deadline"])
-                    save_event(email["id"], email["subject"])
-                except Exception as e:
-                    print(f"Calendar Error: {e}")
+                print("\nAI RESULT:")
+                print(result)
 
-        # Ignore category
-        if result["category"] == "IGNORE":
-            print(f"WOULD ARCHIVE: {email['subject']}")
-            continue
+                # Calendar Integration
+                if result["deadline"] != "NONE" and result["deadline"] != "":
+                    if not event_exists(email["id"]):
+                        try:
+                            create_event(calendar_service, email["subject"], result["deadline"])
+                            save_event(email["id"], email["subject"])
+                        except Exception as e:
+                            print(f"Calendar Error: {e}")
 
-        # Gmail Labels
-        label_id = get_or_create_label(service, result["category"])
-        apply_label(service, email["id"], label_id)
-        
-        importance = calculate_importance(result, email)
-        
-        # Save Email
+                # Ignore category
+                if result["category"] == "IGNORE":
+                    print(f"WOULD ARCHIVE: {email['subject']}")
+                    continue
+
+                # Gmail Labels
+                label_id = get_or_create_label(service, result["category"])
+                apply_label(service, email["id"], label_id)
+                
+                ai_category = result["category"]
+                ai_summary = result["summary"]
+                ai_deadline = result["deadline"]
+                ai_relevance = result["relevance"]
+                ai_importance = calculate_importance(result, email)
+                ai_action = result.get("adaptive_action", "NONE")
+
+            except Exception as e:
+                print(f"AI Processing Skipped/Failed for {email['subject']}: {e}")
+            
+        # Save Email ALWAYS, so it shows up in the UI!
         save_email(
             email["id"],
             email["subject"],
             email["body"],
-            result["category"],
-            result["summary"],
-            result["deadline"],
-            result["relevance"],
-            importance,
+            ai_category,
+            ai_summary,
+            ai_deadline,
+            ai_relevance,
+            ai_importance,
             email["timestamp"],
-            result.get("adaptive_action", "NONE")
+            ai_action
         )
         
         auto_assign_labels(email["id"], email["subject"], email["body"])
