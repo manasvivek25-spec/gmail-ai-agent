@@ -165,9 +165,10 @@ for email in emails:
 
     print(f"PROCESSING NEW EMAIL: {email['subject']}")
 
-    # Add a small delay between requests to avoid TPM limits
-    if processed_count > 0:
-        time.sleep(3)
+    try:
+        # Add a small delay between requests to avoid TPM limits
+        if processed_count > 0:
+            time.sleep(3)
 
         # Default values in case AI fails or is rate limited
         ai_category = "Uncategorized"
@@ -237,17 +238,6 @@ for email in emails:
         
         auto_assign_labels(email["id"], email["subject"], email["body"])
         print(f"Label assignment completed for: {email['subject']}")
-        print("\n" + "=" * 70)
-        print("SUBJECT:")
-        print(email["subject"])
-        print("\nCATEGORY:")
-        print(result["category"])
-        print("\nSUMMARY:")
-        print(result["summary"])
-        print("\nDEADLINE:")
-        print(result["deadline"])
-        print("\nRELEVANCE:")
-        print(result["relevance"])
         print("=" * 70)
 
     except Exception as e:
