@@ -63,7 +63,7 @@ def save_email(
             cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
             cursor.execute("""
-INSERT OR REPLACE INTO emails (
+INSERT INTO emails (
     email_id,
     subject,
     body,
@@ -76,6 +76,16 @@ INSERT OR REPLACE INTO emails (
     adaptive_action
 )
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+ON CONFLICT (email_id) DO UPDATE SET
+    subject = EXCLUDED.subject,
+    body = EXCLUDED.body,
+    category = EXCLUDED.category,
+    summary = EXCLUDED.summary,
+    deadline = EXCLUDED.deadline,
+    relevance = EXCLUDED.relevance,
+    importance = EXCLUDED.importance,
+    received_time = EXCLUDED.received_time,
+    adaptive_action = EXCLUDED.adaptive_action
 """,
 (
     email_id,
@@ -133,10 +143,11 @@ def create_label(label_name):
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
-    INSERT OR IGNORE INTO user_labels (
+    INSERT INTO user_labels (
         label_name
     )
     VALUES (%s)
+    ON CONFLICT (label_name) DO NOTHING
     """, (label_name,))
 
     conn.commit()
@@ -237,11 +248,12 @@ def assign_label(email_id, label_name):
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
-    INSERT OR IGNORE INTO email_labels (
+    INSERT INTO email_labels (
         email_id,
         label_name
     )
     VALUES (%s, %s)
+    ON CONFLICT (email_id, label_name) DO NOTHING
     """, (
         email_id,
         label_name
@@ -291,11 +303,12 @@ def save_tag(
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
-    INSERT OR IGNORE INTO email_tags (
+    INSERT INTO email_tags (
         email_id,
         tag
     )
     VALUES (%s, %s)
+    ON CONFLICT (email_id, tag) DO NOTHING
     """,
     (
         email_id,

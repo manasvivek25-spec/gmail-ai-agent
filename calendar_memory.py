@@ -43,9 +43,10 @@ def save_event(email_id, title):
 
             cursor.execute(
                 """
-                INSERT OR REPLACE
-                INTO calendar_events
+                INSERT INTO calendar_events (email_id, event_name)
                 VALUES (%s, %s)
+                ON CONFLICT (email_id) DO UPDATE SET
+                    event_name = EXCLUDED.event_name
                 """,
                 (
                     email_id,
