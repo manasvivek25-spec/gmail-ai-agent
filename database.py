@@ -21,7 +21,7 @@ def initialize_database():
         deadline TEXT,
         relevance REAL,
         importance REAL DEFAULT 0,
-        received_time INTEGER,
+        received_time BIGINT,
         is_bookmarked INTEGER DEFAULT 0,
         adaptive_action TEXT
     )
