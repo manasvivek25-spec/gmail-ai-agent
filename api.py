@@ -168,12 +168,21 @@ def api_create_rule(req: RuleRequest):
 @app.post("/api/refresh")
 def refresh_emails():
     try:
-        process = subprocess.run([sys.executable, "main.py"], capture_output=True, text=True, encoding="utf-8")
+        with open("automation_log.txt", "w") as f:
+            process = subprocess.run([sys.executable, "main.py"], stdout=f, stderr=subprocess.STDOUT, text=True, encoding="utf-8")
         if process.returncode != 0:
-            return {"status": "error", "message": f"Sync failed: {process.stderr}"}
+            return {"status": "error", "message": "Sync failed. Check /api/logs"}
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.get("/api/logs")
+def get_logs():
+    try:
+        with open("automation_log.txt", "r") as f:
+            return {"logs": f.read()}
+    except Exception:
+        return {"logs": "No logs available."}
 
 @app.post("/api/run-automations")
 def run_automations_api():
