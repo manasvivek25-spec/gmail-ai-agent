@@ -560,7 +560,7 @@ def update_interest(tag):
 
     ON CONFLICT(keyword)
     DO UPDATE SET
-    score = score + 1
+    score = user_interests.score + 1
     """,
     (tag,))
 
