@@ -31,16 +31,19 @@ def get_gmail_service():
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
-            except Exception:
+            except Exception as e:
                 # Fallback if refresh token is revoked
+                if os.environ.get("RENDER"):
+                    raise Exception(f"Google Token Expired. Please update GMAIL_TOKEN_JSON on Render. Error: {e}")
                 flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
                 creds = flow.run_local_server(port=0)
         else:
+            if os.environ.get("RENDER"):
+                raise Exception("Missing or invalid Google Token on Render. Please provide a valid GMAIL_TOKEN_JSON.")
             flow = InstalledAppFlow.from_client_secrets_file(
                 "credentials.json",
                 SCOPES
             )
-
             creds = flow.run_local_server(port=0)
 
         # Only save to file if not using env vars
