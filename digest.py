@@ -1,10 +1,11 @@
-import sqlite3
+from database import get_db_connection
+import psycopg2.extras
 
 
 def generate_digest():
 
-    conn = sqlite3.connect("emails.db")
-    cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
     SELECT subject,

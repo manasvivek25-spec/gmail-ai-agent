@@ -1,7 +1,8 @@
 from flask import Flask, render_template, redirect
 import subprocess
 import sys
-import sqlite3
+from database import get_db_connection
+import psycopg2.extras
 from flask import request
 
 app = Flask(__name__)
@@ -11,17 +12,17 @@ def search():
 
     query = request.args.get("q", "")
 
-    conn = sqlite3.connect("emails.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
+    
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
     SELECT *
     FROM emails
-    WHERE subject LIKE ?
-       OR summary LIKE ?
-       OR body LIKE ?
+    WHERE subject LIKE %s
+       OR summary LIKE %s
+       OR body LIKE %s
     ORDER BY relevance DESC
     """,
     (
@@ -54,15 +55,15 @@ def refresh():
 @app.route("/email/<email_id>")
 def email_detail(email_id):
 
-    conn = sqlite3.connect("emails.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
+    
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
     SELECT *
     FROM emails
-    WHERE email_id = ?
+    WHERE email_id = %s
     """, (email_id,))
 
     email = cursor.fetchone()
@@ -78,10 +79,10 @@ def email_detail(email_id):
 @app.route("/")
 def home():
 
-    conn = sqlite3.connect("emails.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
+    
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("""
     SELECT *

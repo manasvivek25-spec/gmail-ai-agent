@@ -1,39 +1,93 @@
-import sqlite3
+
+from database import get_db_connection
+import psycopg2.extras
+
 
 def event_exists(email_id):
 
-    conn = sqlite3.connect("emails.db")
-    cursor = conn.cursor()
+    try:
 
-    cursor.execute(
-        """
-        SELECT email_id
-        FROM calendar_events
-        WHERE email_id=?
-        """,
-        (email_id,)
-    )
+        with get_db_connection() as conn:
 
-    result = cursor.fetchone()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    conn.close()
+            cursor.execute(
+                """
+                SELECT email_id
+                FROM calendar_events
+                WHERE email_id=%s
+                """,
+                (email_id,)
+            )
 
-    return result is not None
+            result = cursor.fetchone()
+
+            return result is not None
+
+    except Exception as e:
+
+        print(
+            f"Calendar Memory Error: {e}"
+        )
+
+        return False
 
 
 def save_event(email_id, title):
 
-    conn = sqlite3.connect("emails.db")
-    cursor = conn.cursor()
+    try:
 
-    cursor.execute(
-        """
-        INSERT OR REPLACE
-        INTO calendar_events
-        VALUES (?, ?)
-        """,
-        (email_id, title)
-    )
+        with get_db_connection() as conn:
 
-    conn.commit()
-    conn.close()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+            cursor.execute(
+                """
+                INSERT OR REPLACE
+                INTO calendar_events
+                VALUES (%s, %s)
+                """,
+                (
+                    email_id,
+                    title
+                )
+            )
+
+            conn.commit()
+
+            print(
+                f"CALENDAR EVENT SAVED: {title}"
+            )
+
+    except Exception as e:
+
+        print(
+            f"Calendar Save Error: {e}"
+        )
+
+
+def get_event_count():
+
+    try:
+
+        with get_db_connection() as conn:
+
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+            cursor.execute("""
+            SELECT COUNT(*)
+            FROM calendar_events
+            """)
+
+            count = cursor.fetchone()[0]
+
+            return count
+
+    except Exception as e:
+
+        print(
+            f"Calendar Count Error: {e}"
+        )
+
+        return 0
+

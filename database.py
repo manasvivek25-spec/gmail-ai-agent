@@ -1,28 +1,90 @@
-import sqlite3
+import os
+import psycopg2
+from dotenv import load_dotenv
 
-conn = sqlite3.connect("emails.db")
+load_dotenv()
 
-cursor = conn.cursor()
+def get_db_connection():
+    return psycopg2.connect(os.environ.get("SUPABASE_URL"))
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS emails (
-    email_id TEXT PRIMARY KEY,
-    subject TEXT,
-    body TEXT,
-    category TEXT,
-    summary TEXT,
-    deadline TEXT,
-    relevance REAL
-)
-""")
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS calendar_events (
-    email_id TEXT PRIMARY KEY,
-    event_name TEXT
-)
-""")
+def initialize_database():
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-conn.commit()
-conn.close()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS emails (
+        email_id TEXT PRIMARY KEY,
+        subject TEXT,
+        body TEXT,
+        category TEXT,
+        summary TEXT,
+        deadline TEXT,
+        relevance REAL,
+        importance REAL DEFAULT 0,
+        received_time INTEGER,
+        is_bookmarked INTEGER DEFAULT 0,
+        adaptive_action TEXT
+    )
+    """)
 
-print("Database created successfully.")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS calendar_events (
+        email_id TEXT PRIMARY KEY,
+        event_name TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_labels (
+        id SERIAL PRIMARY KEY,
+        label_name TEXT UNIQUE NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS label_rules (
+        id SERIAL PRIMARY KEY,
+        label_name TEXT NOT NULL,
+        keyword TEXT NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS email_labels (
+        email_id TEXT,
+        label_name TEXT,
+        PRIMARY KEY (email_id, label_name)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS email_tags (
+        email_id TEXT,
+        tag TEXT,
+        PRIMARY KEY (email_id, tag)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_actions (
+        email_id TEXT,
+        action TEXT,
+        action_time TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_interests (
+        keyword TEXT PRIMARY KEY,
+        score INTEGER DEFAULT 1
+    )
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    print("PostgreSQL (Supabase) Database initialized successfully.")
+
+if __name__ == "__main__":
+    initialize_database()
