@@ -103,7 +103,7 @@ Return ONLY:
         client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
         
         completion = client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that returns JSON."},
                 {"role": "user", "content": prompt}
