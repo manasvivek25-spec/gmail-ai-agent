@@ -136,7 +136,16 @@ def calculate_importance(
         received_time=email.get("timestamp"),
         is_bookmarked=0
     )
+
+print(f"Checking {len(emails)} recent emails for new messages...")
+
+processed_count = 0
+import time
 for email in emails:
+
+    if processed_count >= 5:
+        print("Batch limit reached (5). Waiting for next cycle to respect rate limits.")
+        break
 
     if email_exists(email["id"]):
 
@@ -146,127 +155,86 @@ for email in emails:
 
         continue
 
-    try:
+    print(f"PROCESSING NEW EMAIL: {email['subject']}")
 
+    # Add a small delay between requests to avoid TPM limits
+    if processed_count > 0:
+        time.sleep(3)
+
+    try:
         # AI Analysis
         result = analyze_email(
             email["subject"],
             email["body"][:3000]
         )
-        for tag in result.get(
-    "tags",
-    []
-):
-
-            save_tag(
-        email["id"],
-        tag
-    )
+        
+        processed_count += 1
+        
+        for tag in result.get("tags", []):
+            save_tag(email["id"], tag)
 
         print("\nAI RESULT:")
         print(result)
 
         # Calendar Integration
-        if (
-            result["deadline"] != "NONE"
-            and
-            result["deadline"] != ""
-        ):
-
-            if not event_exists(
-                email["id"]
-            ):
-
+        if result["deadline"] != "NONE" and result["deadline"] != "":
+            if not event_exists(email["id"]):
                 try:
-
-                    create_event(
-                        calendar_service,
-                        email["subject"],
-                        result["deadline"]
-                    )
-
-                    save_event(
-                        email["id"],
-                        email["subject"]
-                    )
-
+                    create_event(calendar_service, email["subject"], result["deadline"])
+                    save_event(email["id"], email["subject"])
                 except Exception as e:
-
-                    print(
-                        f"Calendar Error: {e}"
-                    )
+                    print(f"Calendar Error: {e}")
 
         # Ignore category
         if result["category"] == "IGNORE":
-
-            print(
-                f"WOULD ARCHIVE: {email['subject']}"
-            )
-
+            print(f"WOULD ARCHIVE: {email['subject']}")
             continue
 
         # Gmail Labels
-        label_id = get_or_create_label(
-            service,
-            result["category"]
-        )
-
-        apply_label(
-            service,
-            email["id"],
-            label_id
-        )
-        importance = calculate_importance(
-            result,
-            email
-        )
+        label_id = get_or_create_label(service, result["category"])
+        apply_label(service, email["id"], label_id)
+        
+        importance = calculate_importance(result, email)
+        
         # Save Email
         save_email(
-    email["id"],
-    email["subject"],
-    email["body"],
-    result["category"],
-    result["summary"],
-    result["deadline"],
-    result["relevance"],
-    importance,
-    email["timestamp"],
-    result.get("adaptive_action", "NONE")
-)
-        auto_assign_labels(
-        email["id"],
-        email["subject"],
-        email["body"]
-)
-        print(
-    f"Label assignment completed for: {email['subject']}"
-)
+            email["id"],
+            email["subject"],
+            email["body"],
+            result["category"],
+            result["summary"],
+            result["deadline"],
+            result["relevance"],
+            importance,
+            email["timestamp"],
+            result.get("adaptive_action", "NONE")
+        )
+        
+        auto_assign_labels(email["id"], email["subject"], email["body"])
+        print(f"Label assignment completed for: {email['subject']}")
         print("\n" + "=" * 70)
-
         print("SUBJECT:")
         print(email["subject"])
-
         print("\nCATEGORY:")
         print(result["category"])
-
         print("\nSUMMARY:")
         print(result["summary"])
-
         print("\nDEADLINE:")
         print(result["deadline"])
-
         print("\nRELEVANCE:")
         print(result["relevance"])
-
         print("=" * 70)
 
     except Exception as e:
-
-        print("\nERROR PROCESSING EMAIL:")
-        print(email["subject"])
-
-        print("\nERROR:")
-        print(e)
+        if "RATE_LIMIT" in str(e):
+            print("Groq rate limit hit. Pausing processing for this cycle.")
+            break
+        else:
+            print("\nERROR PROCESSING EMAIL:")
+            print(email["subject"])
+            print("\nERROR:")
+            print(e)
+            continue
 
 # Run Background Automations after syncing
 try:

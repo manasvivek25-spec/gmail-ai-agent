@@ -132,6 +132,9 @@ Return ONLY:
 
     except Exception as e:
         print(f"Groq Error: {e}")
+        if "429" in str(e) or "rate" in str(e).lower():
+            raise Exception("RATE_LIMIT")
+            
         return {
             "category": "IGNORE",
             "priority": "LOW",
