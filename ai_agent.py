@@ -136,9 +136,9 @@ Return ONLY:
             raise Exception("RATE_LIMIT")
             
         return {
-            "category": "IGNORE",
+            "category": "ERROR",
             "priority": "LOW",
-            "summary": "Unable to analyze email.",
+            "summary": f"AI Error: {str(e)}",
             "deadline": "NONE",
             "relevance": 0,
             "adaptive_action": "NONE"
