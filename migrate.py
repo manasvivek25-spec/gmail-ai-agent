@@ -18,7 +18,7 @@ for root, _, files in os.walk('.'):
                 # Actually, psycopg2.extras.RealDictCursor is better. 
                 # A hack is to just leave it and we'll fix cursor creations. Let's just remove the row_factory line.
                 content = content.replace('conn.row_factory = sqlite3.Row', '')
-                content = content.replace('conn.cursor()', 'conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)')
+                content = content.replace('conn.cursor()', 'conn.cursor()')
                 
                 # Replace SQLite parameter binding `?` with PostgreSQL `%s`
                 content = content.replace('?', '%s')

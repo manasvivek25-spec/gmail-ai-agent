@@ -16,7 +16,7 @@ def get_context(user_query):
     if not results:
         # Fallback to default high-priority context if no specific results
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = conn.cursor()
         today_str = datetime.now().strftime("%Y-%m-%d")
         
         cursor.execute("""

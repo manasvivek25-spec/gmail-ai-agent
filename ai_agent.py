@@ -11,7 +11,7 @@ import psycopg2.extras
 def get_user_profile():
     try:
         with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
             cursor.execute("SELECT keyword, score FROM user_interests ORDER BY score DESC LIMIT 15")
             rows = cursor.fetchall()
             if not rows:

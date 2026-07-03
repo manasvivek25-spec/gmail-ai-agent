@@ -5,7 +5,7 @@ import psycopg2.extras
 def generate_digest():
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT subject,

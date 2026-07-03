@@ -42,7 +42,7 @@ from nl_search import execute_nl_query
 def initialize_database():
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS emails (
@@ -260,7 +260,7 @@ def show_email_by_id(email_id):
         return
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
 SELECT subject,
@@ -335,7 +335,7 @@ def load_emails():
     email_map.clear()
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT email_id,
@@ -438,7 +438,7 @@ def filter_bookmarks():
     email_map.clear()
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT email_id,
@@ -475,7 +475,7 @@ def load_deadlines():
     deadline_map.clear()
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT DISTINCT
@@ -574,7 +574,7 @@ def filter_by_interest(display_text):
     email_map.clear()
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT e.email_id, e.subject
@@ -599,7 +599,7 @@ def load_recommendations():
     recommended_map.clear()
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
     cursor.execute("""
     SELECT email_id, subject, importance
     FROM emails
@@ -624,7 +624,7 @@ def search_emails():
     email_map.clear()
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT email_id,
@@ -755,7 +755,7 @@ def filter_by_label(label_name):
         return
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     for email_id in email_ids:
 

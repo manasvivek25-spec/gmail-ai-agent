@@ -10,7 +10,7 @@ def email_exists(email_id):
 
         with get_db_connection() as conn:
 
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
 
             cursor.execute(
                 """
@@ -60,7 +60,7 @@ def save_email(
 
         with get_db_connection() as conn:
 
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
 
             cursor.execute("""
 INSERT INTO emails (
@@ -119,7 +119,7 @@ def get_email_count():
 
         with get_db_connection() as conn:
 
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
 
             cursor.execute("""
             SELECT COUNT(*)
@@ -140,7 +140,7 @@ def get_email_count():
 def create_label(label_name):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     INSERT INTO user_labels (
@@ -155,7 +155,7 @@ def create_label(label_name):
 def delete_label(label_name):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     DELETE FROM user_labels
@@ -172,7 +172,7 @@ def delete_label(label_name):
 def get_labels():
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT label_name
@@ -191,7 +191,7 @@ def add_rule(
 ):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT 1
@@ -226,7 +226,7 @@ def add_rule(
 def get_rules(label_name):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT keyword
@@ -245,7 +245,7 @@ def get_rules(label_name):
 def assign_label(email_id, label_name):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     INSERT INTO email_labels (
@@ -264,7 +264,7 @@ def assign_label(email_id, label_name):
 def get_emails_for_label(label_name):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT email_id
@@ -281,7 +281,7 @@ def get_emails_for_label(label_name):
 def get_all_labels():
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT label_name
@@ -300,7 +300,7 @@ def save_tag(
 ):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     INSERT INTO email_tags (
@@ -324,7 +324,7 @@ def record_action(
 ):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     INSERT INTO user_actions (
@@ -352,7 +352,7 @@ def get_action_score(
 ):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT COUNT(*)
@@ -421,7 +421,7 @@ def calculate_importance(
 
 def recalculate_email_importance(email_id):
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
     cursor.execute("SELECT relevance, deadline, received_time, is_bookmarked FROM emails WHERE email_id=%s", (email_id,))
     row = cursor.fetchone()
     if not row:
@@ -453,7 +453,7 @@ def recalculate_email_importance(email_id):
 
 def toggle_bookmark(email_id):
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     UPDATE emails
@@ -471,7 +471,7 @@ def delete_rule(
 ):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     DELETE FROM label_rules
@@ -490,7 +490,7 @@ def count_emails_for_label(
 ):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT COUNT(*)
@@ -509,7 +509,7 @@ def count_emails_for_label(
 def get_email_tags(email_id):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT tag
@@ -529,7 +529,7 @@ def get_email_tags(email_id):
 def get_email_labels(email_id):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT label_name
@@ -549,7 +549,7 @@ def get_email_labels(email_id):
 def update_interest(tag):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     INSERT INTO user_interests(
@@ -569,7 +569,7 @@ def update_interest(tag):
 def get_interest_score(tag):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT score
@@ -586,7 +586,7 @@ def get_interest_score(tag):
 def get_top_interests(limit=5):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT keyword,
@@ -605,7 +605,7 @@ def get_top_interests(limit=5):
 
 def get_top_tags(limit=10):
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
     cursor.execute("""
     SELECT tag,
            COUNT(*) as count
@@ -621,7 +621,7 @@ def get_top_tags(limit=10):
 
 def get_all_emails_metadata(limit=50):
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT email_id,
@@ -674,7 +674,7 @@ def get_emails_metadata_by_ids(email_ids):
         return []
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     placeholders = ",".join(["%s"] * len(email_ids))
     cursor.execute(f"""
@@ -724,7 +724,7 @@ def get_emails_metadata_by_ids(email_ids):
 def get_recommended_emails_metadata(limit=20):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT email_id,
@@ -773,7 +773,7 @@ def get_recommended_emails_metadata(limit=20):
 def get_email_details(email_id):
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT subject,
@@ -807,7 +807,7 @@ def get_email_details(email_id):
 def get_all_deadlines():
 
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     today_str = datetime.today().strftime("%Y-%m-%d")
 
@@ -866,7 +866,7 @@ def get_all_deadlines():
 
 def get_category_counts():
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
     cursor.execute("""
     SELECT category, COUNT(*)
     FROM emails
@@ -880,7 +880,7 @@ def get_category_counts():
 
 def get_emails_by_category(category):
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
     cursor.execute("""
     SELECT email_id
     FROM emails

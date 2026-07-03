@@ -15,7 +15,7 @@ def search():
     conn = get_db_connection()
     
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT *
@@ -58,7 +58,7 @@ def email_detail(email_id):
     conn = get_db_connection()
     
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT *
@@ -82,7 +82,7 @@ def home():
     conn = get_db_connection()
     
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT *

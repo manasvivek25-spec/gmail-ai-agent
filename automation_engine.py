@@ -12,7 +12,7 @@ def run_all_automations():
 def auto_flag_urgent_deadlines():
     """Automatically upgrades priority to Critical for emails with a deadline in < 3 days."""
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor()
     
     # Get all emails with deadlines
     cursor.execute("SELECT email_id, deadline, importance FROM emails WHERE deadline IS NOT NULL AND deadline != 'NONE' AND deadline != ''")
@@ -46,7 +46,7 @@ def execute_adaptive_actions():
     print("Executing adaptive actions...")
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = conn.cursor()
         
         # We process ALL emails that have an adaptive action that isn't NONE or COMPLETED
         cursor.execute("SELECT email_id, adaptive_action, category FROM emails WHERE adaptive_action != 'NONE' AND adaptive_action != 'COMPLETED'")

@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
             from database import get_db_connection
 import psycopg2.extras
             conn = get_db_connection()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
             cursor.execute("SELECT email_id FROM emails WHERE is_bookmarked = 1 ORDER BY received_time DESC")
             email_ids = [row[0] for row in cursor.fetchall()]
             conn.close()

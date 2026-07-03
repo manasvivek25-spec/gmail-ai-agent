@@ -81,7 +81,7 @@ def execute_nl_query(user_query):
     
     try:
         with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
             cursor.execute(sql)
             rows = cursor.fetchall()
             return rows

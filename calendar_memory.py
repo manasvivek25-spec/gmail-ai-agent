@@ -9,7 +9,7 @@ def event_exists(email_id):
 
         with get_db_connection() as conn:
 
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
 
             cursor.execute(
                 """
@@ -39,7 +39,7 @@ def save_event(email_id, title):
 
         with get_db_connection() as conn:
 
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
 
             cursor.execute(
                 """
@@ -73,7 +73,7 @@ def get_event_count():
 
         with get_db_connection() as conn:
 
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor = conn.cursor()
 
             cursor.execute("""
             SELECT COUNT(*)
