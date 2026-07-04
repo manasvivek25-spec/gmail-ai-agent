@@ -213,12 +213,14 @@ def add_rule(
 
         cursor.execute("""
         INSERT INTO label_rules (
+            user_id,
             label_name,
             keyword
         )
-        VALUES (%s, %s)
+        VALUES (%s, %s, %s)
         """,
         (
+            user_id,
             label_name,
             keyword.lower()
         ))
@@ -252,12 +254,14 @@ def assign_label(user_id, email_id, label_name):
 
     cursor.execute("""
     INSERT INTO email_labels (
+        user_id,
         email_id,
         label_name
     )
-    VALUES (%s, %s)
+    VALUES (%s, %s, %s)
     ON CONFLICT (user_id, email_id, label_name) DO NOTHING
     """, (
+        user_id,
         email_id,
         label_name
     ))
@@ -289,7 +293,8 @@ def get_all_labels(user_id):
     cursor.execute("""
     SELECT label_name
     FROM user_labels
-    """)
+    WHERE user_id=%s
+    """, (user_id,))
 
     rows = cursor.fetchall()
 
