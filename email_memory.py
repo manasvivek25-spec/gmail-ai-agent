@@ -303,6 +303,7 @@ def get_all_labels(user_id):
     return [row[0] for row in rows]
 
 def save_tag(
+    user_id,
     email_id,
     tag
 ):
@@ -312,13 +313,15 @@ def save_tag(
 
     cursor.execute("""
     INSERT INTO email_tags (
+        user_id,
         email_id,
         tag
     )
-    VALUES (%s, %s)
+    VALUES (%s, %s, %s)
     ON CONFLICT (user_id, email_id, tag) DO NOTHING
     """,
     (
+        user_id,
         email_id,
         tag
     ))
@@ -327,6 +330,7 @@ def save_tag(
     conn.commit()
     conn.close()
 def record_action(
+    user_id,
     email_id,
     action
 ):
@@ -336,6 +340,7 @@ def record_action(
 
     cursor.execute("""
     INSERT INTO user_actions (
+        user_id,
         email_id,
         action,
         action_time
@@ -343,10 +348,12 @@ def record_action(
     VALUES (
         %s,
         %s,
+        %s,
         CURRENT_TIMESTAMP
     )
     """,
     (
+        user_id,
         email_id,
         action
     ))
@@ -356,6 +363,7 @@ def record_action(
 
 
 def get_action_score(
+    user_id,
     email_id
 ):
 
@@ -368,6 +376,7 @@ def get_action_score(
     WHERE user_id=%s AND email_id=%s
     """,
     (
+        user_id,
         email_id,
     ))
 
@@ -442,20 +451,20 @@ def recalculate_email_importance(user_id, email_id):
     tags = [t[0] for t in cursor.fetchall()]
     interest_score = 0
     for tag in tags:
-        interest_score += get_interest_score(tag)
+        interest_score += get_interest_score(user_id, tag)
         
-    deadline_score = get_deadline_score(deadline)
+    deadline_score = get_deadline_score(user_id, deadline)
     
     new_importance = calculate_importance(
         relevance=relevance,
         deadline_score=deadline_score,
         interest_score=interest_score,
-        action_score=0, # Can be expanded later
+        action_score=get_action_score(user_id, email_id),
         received_time=received_time,
         is_bookmarked=is_bookmarked
     )
     
-    cursor.execute("UPDATE emails SET importance=%s WHERE user_id=%s AND email_id=%s", (new_importance, email_id))
+    cursor.execute("UPDATE emails SET importance=%s WHERE user_id=%s AND email_id=%s", (new_importance, user_id, email_id))
     conn.commit()
     conn.close()
 
@@ -472,8 +481,9 @@ def toggle_bookmark(user_id, email_id):
     conn.commit()
     conn.close()
     
-    recalculate_email_importance(email_id)
+    recalculate_email_importance(user_id, email_id)
 def delete_rule(
+    user_id,
     label_name,
     keyword
 ):
@@ -487,6 +497,7 @@ def delete_rule(
     AND keyword=%s
     """,
     (
+        user_id,
         label_name,
         keyword.lower()
     ))
@@ -494,6 +505,7 @@ def delete_rule(
     conn.commit()
     conn.close()
 def count_emails_for_label(
+    user_id,
     label_name
 ):
 
@@ -506,6 +518,7 @@ def count_emails_for_label(
     WHERE user_id=%s AND label_name=%s
     """,
     (
+        user_id,
         label_name,
     ))
 
@@ -695,9 +708,9 @@ def get_emails_metadata_by_ids(user_id, email_ids):
            is_bookmarked,
            category
     FROM emails
-    WHERE email_id IN ({placeholders})
+    WHERE user_id=%s AND email_id IN ({placeholders})
     ORDER BY received_time DESC
-    """, email_ids)
+    """, [user_id] + email_ids)
 
     rows = cursor.fetchall()
     conn.close()
@@ -744,6 +757,7 @@ def get_recommended_emails_metadata(user_id, limit=20):
            is_bookmarked,
            category
     FROM emails
+    WHERE user_id=%s
     ORDER BY importance DESC
     LIMIT %s
     """, (user_id, limit))
@@ -827,11 +841,12 @@ def get_all_deadlines(user_id):
            summary,
            importance
     FROM emails
-    WHERE deadline IS NOT NULL
+    WHERE user_id=%s
+      AND deadline IS NOT NULL
       AND deadline != ''
       AND deadline != 'NONE'
       AND deadline >= %s
-    """, (today_str,))
+    """, (user_id, today_str))
 
     rows = cursor.fetchall()
     conn.close()
@@ -878,10 +893,10 @@ def get_category_counts(user_id):
     cursor.execute("""
     SELECT category, COUNT(*)
     FROM emails
-    WHERE category IS NOT NULL AND category != '' AND category != 'IGNORE'
+    WHERE user_id=%s AND category IS NOT NULL AND category != '' AND category != 'IGNORE'
     GROUP BY category
     ORDER BY COUNT(*) DESC
-    """)
+    """, (user_id,))
     rows = cursor.fetchall()
     conn.close()
     return {row[0]: row[1] for row in rows}
