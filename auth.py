@@ -8,13 +8,21 @@ import googleapiclient.discovery
 router = APIRouter()
 JWT_SECRET = os.environ.get('JWT_SECRET', 'super_secret_jwt_key_for_mail_agent')
 
+CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+
+if "RENDER_EXTERNAL_URL" in os.environ:
+    REDIRECT_URI = f"{os.environ['RENDER_EXTERNAL_URL']}/auth/google/callback"
+else:
+    REDIRECT_URI = "http://localhost:8000/auth/google/callback"
+
 CLIENT_CONFIG = {
     'web': {
-        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
-        'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
         'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
         'token_uri': 'https://oauth2.googleapis.com/token',
-        'redirect_uris': ['http://localhost:8000/auth/google/callback']
+        'redirect_uris': [REDIRECT_URI]
     }
 }
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'openid', 'email', 'profile']
@@ -37,8 +45,8 @@ def get_auth_url():
     import urllib.parse
     base_url = "https://accounts.google.com/o/oauth2/v2/auth"
     params = {
-        "client_id": os.environ.get('GOOGLE_CLIENT_ID'),
-        "redirect_uri": "http://localhost:8000/auth/google/callback",
+        "client_id": CLIENT_ID,
+        "redirect_uri": REDIRECT_URI,
         "response_type": "code",
         "scope": " ".join(SCOPES),
         "access_type": "offline",
@@ -54,9 +62,9 @@ def auth_callback(code: str):
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
-        "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
-        "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
-        "redirect_uri": "http://localhost:8000/auth/google/callback",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "redirect_uri": REDIRECT_URI,
         "grant_type": "authorization_code",
     }
     r = requests.post(token_url, data=data)
