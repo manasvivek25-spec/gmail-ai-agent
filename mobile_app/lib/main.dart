@@ -18,7 +18,7 @@ void callbackDispatcher() {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
-        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/emails'),
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails'),
         headers: {'Bypass-Tunnel-Reminder': 'true', 'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
@@ -125,7 +125,7 @@ class _InboxScreenState extends State<InboxScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
-        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/emails'),
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails'),
         headers: {'Bypass-Tunnel-Reminder': 'true', 'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
@@ -133,6 +133,12 @@ class _InboxScreenState extends State<InboxScreen> {
           emails = json.decode(response.body);
           isLoading = false;
         });
+      } else if (response.statusCode == 401) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('jwt_token');
+        if (mounted) {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+        }
       } else {
         throw Exception('Failed to load emails');
       }
@@ -148,12 +154,18 @@ class _InboxScreenState extends State<InboxScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       final response = await http.post(
-        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/refresh'),
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/refresh'),
         headers: {'Bypass-Tunnel-Reminder': 'true', 'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         // Sync completed, now fetch the updated emails
         await fetchEmails();
+      } else if (response.statusCode == 401) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('jwt_token');
+        if (mounted) {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+        }
       } else {
         throw Exception('Failed to sync agent');
       }
@@ -168,7 +180,7 @@ class _InboxScreenState extends State<InboxScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       await http.post(
-        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/labels/create'),
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/labels/create'),
         headers: {
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true',
@@ -187,7 +199,7 @@ class _InboxScreenState extends State<InboxScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       await http.post(
-        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/rules/create'),
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/rules/create'),
         headers: {
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true',
@@ -316,6 +328,16 @@ class _InboxScreenState extends State<InboxScreen> {
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove(\'jwt_token\');
+              if (mounted) {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: syncAgent,

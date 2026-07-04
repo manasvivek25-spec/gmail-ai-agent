@@ -11,7 +11,10 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'super_secret_jwt_key_for_mail_agent')
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
-REDIRECT_URI = "https://gmail-ai-agent-ih4e.onrender.com/auth/google/callback"
+if "RENDER_EXTERNAL_URL" in os.environ:
+    REDIRECT_URI = f"{os.environ['RENDER_EXTERNAL_URL']}/auth/google/callback"
+else:
+    REDIRECT_URI = "http://localhost:8000/auth/google/callback"
 CLIENT_CONFIG = {
     'web': {
         'client_id': CLIENT_ID,
