@@ -636,7 +636,7 @@ def get_all_emails_metadata(user_id, limit=50):
            is_bookmarked,
            category
     FROM emails
-    WHERE category != 'PHD_SEMINAR'
+    WHERE user_id=%s AND category != 'PHD_SEMINAR'
     ORDER BY received_time DESC
     LIMIT %s
     """, (user_id, limit))
