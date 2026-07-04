@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
     
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OmniAgentApp()),
+        MaterialPageRoute(builder: (_) => const InboxScreen()),
       );
     }
   }
