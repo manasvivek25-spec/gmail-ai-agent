@@ -96,5 +96,45 @@ def auth_callback(code: str):
         conn.commit()
 
     token = jwt.encode({'user_id': user_id}, JWT_SECRET, algorithm='HS256')
-    return RedirectResponse(url=f'http://localhost:1420/?token={token}')
+    
+    html = f"""
+    <html>
+        <head>
+            <title>Login Successful</title>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #09090b; color: white; margin: 0; }}
+                .container {{ background: #18181b; padding: 40px; border-radius: 24px; text-align: center; max-width: 500px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid #27272a; }}
+                .token {{ background: #27272a; padding: 15px; border-radius: 12px; word-break: break-all; margin: 20px 0; color: #a1a1aa; font-family: monospace; font-size: 13px; border: 1px solid #3f3f46; }}
+                button {{ background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 600; margin: 8px; transition: all 0.2s; }}
+                button:hover {{ background: #1d4ed8; transform: translateY(-2px); }}
+                button.secondary {{ background: #27272a; border: 1px solid #3f3f46; }}
+                button.secondary:hover {{ background: #3f3f46; }}
+                h1 {{ color: #60a5fa; margin-top: 0; }}
+                .section {{ margin-top: 30px; padding-top: 25px; border-top: 1px solid #27272a; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Authentication Successful!</h1>
+                <p style="color: #a1a1aa; font-size: 15px; line-height: 1.5;">You have successfully connected your Google account to Mail Agent.</p>
+                
+                <div class="section">
+                    <h3 style="margin-bottom: 15px; color: #e4e4e7;">1. Web & Desktop App</h3>
+                    <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 20px;">Click below to securely route your token back to your dashboard.</p>
+                    <button onclick="window.location.href='http://localhost:1420/?token={token}'">Open Tauri Desktop (1420)</button>
+                    <button class="secondary" onclick="window.location.href='http://localhost:5173/?token={token}'">Open Web Browser (5173)</button>
+                </div>
+                
+                <div class="section">
+                    <h3 style="margin-bottom: 15px; color: #e4e4e7;">2. Mobile App</h3>
+                    <p style="color: #a1a1aa; font-size: 14px;">Copy your Device Sync Token below and paste it into the Flutter mobile app.</p>
+                    <div class="token" id="tokenBox">{token}</div>
+                    <button class="secondary" onclick="navigator.clipboard.writeText(document.getElementById('tokenBox').innerText); alert('Token Copied Successfully!');">Copy Sync Token</button>
+                </div>
+            </div>
+        </body>
+    </html>
+    """
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html)
 
