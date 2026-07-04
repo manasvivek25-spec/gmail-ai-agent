@@ -1,139 +1,52 @@
-import socket
-old_getaddrinfo = socket.getaddrinfo
-def new_getaddrinfo(*args, **kwargs):
-    responses = old_getaddrinfo(*args, **kwargs)
-    return [response for response in responses if response[0] == socket.AF_INET]
-socket.getaddrinfo = new_getaddrinfo
-
+import sys
+import time
+from datetime import datetime
 from gmail_reader import get_latest_emails
 from gmail_service import get_gmail_service
 from ai_agent import analyze_email
-
 from calendar_service import get_calendar_service
 from calendar_manager import create_event
-
-from calendar_memory import (
-    event_exists,
-    save_event
-)
-
-
-from label_manager import (
-    get_or_create_label,
-    apply_label
-)
+from calendar_memory import event_exists, save_event
+from label_manager import get_or_create_label, apply_label
 from email_memory import (
-    email_exists,
-    save_email,
-    save_tag,
-    assign_label,
-    get_all_labels,
-    get_rules,
-    get_interest_score
+    email_exists, save_email, save_tag, assign_label,
+    get_all_labels, get_rules, get_interest_score, calculate_importance as calc_imp
 )
-import sys
+from database import get_db_connection
 
 sys.stdout.reconfigure(encoding="utf-8")
-def auto_assign_labels(
-    email_id,
-    subject,
-    body
-):
 
-    text = (
-        subject + " " + body
-    ).lower()
-
-    labels = get_all_labels()
-
+def auto_assign_labels(user_id, email_id, subject, body):
+    text = (subject + " " + body).lower()
+    labels = get_all_labels(user_id)
     for label in labels:
-
-        rules = get_rules(label)
-
+        rules = get_rules(user_id, label)
         for keyword in rules:
-
             if keyword.lower() in text:
-
-                assign_label(
-                    email_id,
-                    label
-                )
-
-                print(
-                    f"Assigned '{label}' -> {subject}"
-                )
-
+                assign_label(user_id, email_id, label)
+                print(f"Assigned '{label}' -> {subject}")
                 break
-# Gmail Service
-service = get_gmail_service()
 
-# Calendar Service
-calendar_service = get_calendar_service()
-
-# Get latest emails
-emails = get_latest_emails(50)
-from datetime import datetime
-
-
-def get_deadline_score(
-    deadline
-):
-
-    if (
-        deadline == "NONE"
-        or
-        deadline == ""
-    ):
-        return 0
-
+def get_deadline_score(deadline):
+    if deadline == "NONE" or deadline == "": return 0
     try:
-
-        deadline_date = datetime.strptime(
-            deadline,
-            "%Y-%m-%d"
-        ).date()
-
+        deadline_date = datetime.strptime(deadline, "%Y-%m-%d").date()
         today = datetime.today().date()
-
-        days = (
-            deadline_date - today
-        ).days
-
-        if days <= 0:
-            return 20
-
-        elif days <= 1:
-            return 15
-
-        elif days <= 3:
-            return 10
-
-        elif days <= 7:
-            return 5
-
+        days = (deadline_date - today).days
+        if days <= 0: return 20
+        elif days <= 1: return 15
+        elif days <= 3: return 10
+        elif days <= 7: return 5
         return 0
+    except: return 0
 
-    except:
-        return 0
-def calculate_importance(
-    result,
-    email
-):
-
+def calculate_importance(user_id, result, email):
     relevance = result.get("relevance", 0)
-
     interest_score = 0
     for tag in result.get("tags", []):
-        interest_score += get_interest_score(tag)
-
+        interest_score += get_interest_score(user_id, tag)
     deadline_score = get_deadline_score(result.get("deadline", "NONE"))
-
-    # For new emails, action_score and recency_score are 0 initially
-    # but we can add a base recency score if we wanted to.
-    # We will use the centralized formula logic here.
     
-    from email_memory import calculate_importance as calc_imp
-
     return calc_imp(
         relevance=relevance,
         deadline_score=deadline_score,
@@ -143,117 +56,98 @@ def calculate_importance(
         is_bookmarked=0
     )
 
-print(f"Checking {len(emails)} recent emails for new messages...")
-
-processed_count = 0
-import time
-for email in emails:
-
-    if processed_count >= 5:
-        print("Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.")
-        ai_limit_reached = True
-    else:
+def process_user(user_id, refresh_token):
+    service = get_gmail_service(refresh_token)
+    calendar_service = get_calendar_service(refresh_token)
+    emails = get_latest_emails(service, 50)
+    
+    print(f"Checking {len(emails)} recent emails for user {user_id}...")
+    processed_count = 0
+    
+    for email in emails:
         ai_limit_reached = False
 
-    if email_exists(email["id"]):
-
-        print(
-            f"Skipping: {email['subject']}"
-        )
-
-        continue
-
-    print(f"PROCESSING NEW EMAIL: {email['subject']}")
-
-    try:
-        # Add a small delay between requests to avoid TPM limits
-        if processed_count > 0:
-            time.sleep(3)
-
-        # Default values in case AI fails or is rate limited
-        ai_category = "Uncategorized"
-        ai_summary = "AI Analysis Pending / Skipped"
-        ai_deadline = "NONE"
-        ai_relevance = 0
-        ai_importance = 0
-        ai_action = "NONE"
-
-        if not ai_limit_reached:
-            try:
-                # AI Analysis
-                result = analyze_email(
-                    email["subject"],
-                    email["body"][:3000]
-                )
-                
-                processed_count += 1
-                
-                for tag in result.get("tags", []):
-                    save_tag(email["id"], tag)
-
-                print("\nAI RESULT:")
-                print(result)
-
-                # Calendar Integration
-                if result["deadline"] != "NONE" and result["deadline"] != "":
-                    if not event_exists(email["id"]):
-                        try:
-                            create_event(calendar_service, email["subject"], result["deadline"])
-                            save_event(email["id"], email["subject"])
-                        except Exception as e:
-                            print(f"Calendar Error: {e}")
-
-                # Ignore category
-                if result["category"] == "IGNORE":
-                    print(f"WOULD ARCHIVE: {email['subject']}")
-                    continue
-
-                # Gmail Labels
-                label_id = get_or_create_label(service, result["category"])
-                apply_label(service, email["id"], label_id)
-                
-                ai_category = result["category"]
-                ai_summary = result["summary"]
-                ai_deadline = result["deadline"]
-                ai_relevance = result["relevance"]
-                ai_importance = calculate_importance(result, email)
-                ai_action = result.get("adaptive_action", "NONE")
-
-            except Exception as e:
-                print(f"AI Processing Skipped/Failed for {email['subject']}: {e}")
-            
-        # Save Email ALWAYS, so it shows up in the UI!
-        save_email(
-            email["id"],
-            email["subject"],
-            email["body"],
-            ai_category,
-            ai_summary,
-            ai_deadline,
-            ai_relevance,
-            ai_importance,
-            email["timestamp"],
-            ai_action
-        )
-        
-        auto_assign_labels(email["id"], email["subject"], email["body"])
-        print(f"Label assignment completed for: {email['subject']}")
-        print("=" * 70)
-
-    except Exception as e:
-        if "RATE_LIMIT" in str(e):
-            print("Groq rate limit hit. Pausing processing for this cycle.")
-            break
-        else:
-            print("\nERROR PROCESSING EMAIL:")
-            print(email["subject"])
-            print("\nERROR:")
-            print(e)
+        if email_exists(user_id, email["id"]):
+            print(f"Skipping: {email['subject']}")
             continue
 
-# Run Background Automations after syncing
-try:
-    from automation_engine import run_all_automations
-    run_all_automations()
-except Exception as e:
-    print(f"Failed to run automations: {e}")
+        print(f"PROCESSING NEW EMAIL: {email['subject']}")
+        try:
+            if processed_count > 0: time.sleep(3)
+            
+            ai_category = "Uncategorized"
+            ai_summary = "AI Analysis Pending / Skipped"
+            ai_deadline = "NONE"
+            ai_relevance = 0
+            ai_importance = 0
+            ai_action = "NONE"
+
+            if not ai_limit_reached:
+                try:
+                    result = analyze_email(email["subject"], email["body"][:3000])
+                    processed_count += 1
+                    
+                    for tag in result.get("tags", []):
+                        save_tag(user_id, email["id"], tag)
+
+                    print("\nAI RESULT:")
+                    print(result)
+
+                    if result["deadline"] not in ["NONE", ""]:
+                        if not event_exists(user_id, email["id"]):
+                            try:
+                                create_event(calendar_service, email["subject"], result["deadline"])
+                                save_event(user_id, email["id"], email["subject"])
+                            except Exception as e:
+                                print(f"Calendar Error: {e}")
+
+                    if result["category"] == "IGNORE":
+                        continue
+
+                    label_id = get_or_create_label(service, result["category"])
+                    apply_label(service, email["id"], label_id)
+                    
+                    ai_category = result["category"]
+                    ai_summary = result["summary"]
+                    ai_deadline = result["deadline"]
+                    ai_relevance = result["relevance"]
+                    ai_importance = calculate_importance(user_id, result, email)
+                    ai_action = result.get("adaptive_action", "NONE")
+                except Exception as e:
+                    print(f"AI Processing Skipped/Failed for {email['subject']}: {e}")
+
+            save_email(
+                user_id, email["id"], email["subject"], email["body"],
+                ai_category, ai_summary, ai_deadline, ai_relevance,
+                ai_importance, email["timestamp"], ai_action
+            )
+            auto_assign_labels(user_id, email["id"], email["subject"], email["body"])
+            
+        except Exception as e:
+            if "RATE_LIMIT" in str(e):
+                print("Groq rate limit hit. Pausing processing for this cycle.")
+                break
+            print(f"\nERROR PROCESSING EMAIL: {e}")
+            continue
+
+    try:
+        from automation_engine import run_all_automations
+        run_all_automations() # Note: automation_engine also needs user_id in the future
+    except Exception as e:
+        print(f"Failed to run automations: {e}")
+
+def main():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id, refresh_token FROM users")
+    users = cursor.fetchall()
+    conn.close()
+    
+    for user_id, refresh_token in users:
+        print(f"=============================")
+        print(f"Processing user {user_id}...")
+        process_user(user_id, refresh_token)
+        print(f"=============================")
+
+if __name__ == "__main__":
+    main()

@@ -1,7 +1,10 @@
-import os, psycopg2
-conn = psycopg2.connect(os.environ['SUPABASE_URL'])
-cursor = conn.cursor()
-cursor.execute('ALTER TABLE emails ALTER COLUMN received_time TYPE BIGINT')
-conn.commit()
-conn.close()
-print('Fixed!')
+import psycopg2
+from database import get_db_connection
+try:
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM emails WHERE category = 'Uncategorized'")
+        conn.commit()
+        print(f'Deleted {cursor.rowcount} uncategorized emails.')
+except Exception as e:
+    print(e)

@@ -47,9 +47,7 @@ def get_email_body(payload):
     return ""
 
 
-def get_latest_emails(max_results=50):
-
-    service = get_gmail_service()
+def get_latest_emails(service, max_results=50):
 
     results = (
         service.users()

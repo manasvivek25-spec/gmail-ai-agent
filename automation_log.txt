@@ -1,0 +1,216 @@
+=============================
+Processing user 107353106888683946567...
+Checking 50 recent emails for user 107353106888683946567...
+PROCESSING NEW EMAIL: Mess Menu for Saturday
+GROQ RESPONSE:
+
+AI RESULT:
+{'category': 'MESS', 'tags': [], 'priority': 'LOW', 'summary': "You have received an email containing the week's mess menu, with options for breakfast, lunch, snacks, and dinner.", 'deadline': 'NONE', 'relevance': 7, 'adaptive_action': 'NONE'}
+Using existing label: MESS
+Label Applied: Label_1
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+PROCESSING NEW EMAIL: Summer Technical Training & Internship Inquiry: 3-Month Accenture Program
+GROQ RESPONSE:
+AI Processing Skipped/Failed for Summer Technical Training & Internship Inquiry: 3-Month Accenture Program: save_tag() takes 2 positional arguments but 3 were given
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+PROCESSING NEW EMAIL: Re: Registration for Hostel Management Portal (HMP)
+GROQ RESPONSE:
+AI Processing Skipped/Failed for Re: Registration for Hostel Management Portal (HMP): save_tag() takes 2 positional arguments but 3 were given
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+PROCESSING NEW EMAIL: NPTEL Course Registration for July 2026 - Reg.
+GROQ RESPONSE:
+AI Processing Skipped/Failed for NPTEL Course Registration for July 2026 - Reg.: save_tag() takes 2 positional arguments but 3 were given
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+PROCESSING NEW EMAIL: Internship
+GROQ RESPONSE:
+AI Processing Skipped/Failed for Internship: save_tag() takes 2 positional arguments but 3 were given
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Re: Application for Cultural Club Coordinators 26-27
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Re: CSDAC Summer internship
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Mess Menu for Friday
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Ends soon: Top courses at ₹7,499/year
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Re: "(Action Required) Circular - Complete the Form IIIT-DM | NASSCOM Certification"
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: "(Action Required) Circular - Complete the Form IIIT-DM | NASSCOM Certification"
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Announcement:: Notification for PhD Public Viva-Voce Examination of Ms. BARKAVI K (EDM20D002) - reg
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Announcement:: Notification for PhD Public Viva-Voce Examination of Mr. V SANTHOSH KUMAR TANGUDU (COE20D004) - reg
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Invitation: IIC Meeting  @ Fri Jul 3, 2026 12:30pm - 1pm (IST) (cs24b1106@iiitdm.ac.in)
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Few hours left to win Internships with Dabur, Ogilvy & ₹5L+ in Prizes
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Re: Registration for Hostel Management Portal (HMP)
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Recruitment 2026 | Smart Sense Club
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Apply Now: Top Internships & Hackathons near you!
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Lost Silver ring near Ashoka Washing Machine
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Plan a quick vocabulary lesson
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Mess Menu for Thursday
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: CSDAC Summer internship
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Reg: Email draft of the INAE Youth Conclave-NIT Raipur
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Myntra WeForShe Hacker-ramp 2026 || Registration Deadline Extended - 3 PM, 2nd July
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Final call to intern with top brands, meet Kuska Kapila & ₹5L+ Prize Pool
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Announcing the New Head Core of Developer Club 2026-27
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Announcement:: Notification for PhD Public Viva-Voce Examination of Mr. CHANDRASEKARAN R (EDM20D003) - reg
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Application for Cultural Club Coordinators 26-27
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Ready: Fundamentals of Analytics on AWS
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Invitation to Participate in the 14th “Bengaluru INDIA NANO” - 2026
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Grab internship with top brands, meet Kuska Kapila & ₹5L+ Prize Pool
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Announcement:: Notification for PhD Public Viva-Voce Examination of Mr. KALIMUTHU T (MDM20D003)-Reg
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Re: Registration for Hostel Management Portal (HMP)
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Apply Now: Top Internships & Hackathons near you!
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Mess Menu for Tuesday
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Registration for Hostel Management Portal (HMP)
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Request to Circulate – University of Toyama Summer School 2026 Opportunity
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Sir/Madam - Buddy4Study Scholarship Prerna | June 2026
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Fwd: Lost wired earphones
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Announcement: Core Team and Coordinators for Technical Affairs
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Apply Now: Top Internships & Hackathons near you!
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Chintakula, see what you missed at Next ‘26
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Mess Menu For Monday
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: MATLAB & Simulink R2026b Prerelease for Your License
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: You’re eligible! IET India Scholarship Award 2026
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Find similar products from a photo
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Make this weekend count: ₹7,499/year for Coursera Plus
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Mess Menu for Sunday
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: "(Action Required) Circular - Complete the Form IIIT-DM | NASSCOM Certification"
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Batch limit reached (5). Skipping AI for remaining emails this cycle to respect rate limits.
+PROCESSING NEW EMAIL: Apply Now: Top Internships & Hackathons near you!
+Database Save Error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Running Automation Engine...
+Executing adaptive actions...
+Automations completed.
+=============================

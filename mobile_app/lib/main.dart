@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login_screen.dart';
+import 'login_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -12,9 +15,11 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
-        Uri.parse('https://silver-frogs-shout.loca.lt/api/emails'),
-        headers: {'Bypass-Tunnel-Reminder': 'true'},
+        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/emails'),
+        headers: {'Bypass-Tunnel-Reminder': 'true', 'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         final emails = json.decode(response.body) as List<dynamic>;
@@ -59,7 +64,7 @@ void main() async {
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(settings: initializationSettings);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   
   await Workmanager().initialize(
     callbackDispatcher,
@@ -72,21 +77,25 @@ void main() async {
     constraints: Constraints(networkType: NetworkType.connected),
   );
 
-  runApp(const EmailAIAgentApp());
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  runApp(EmailAIAgentApp(isAuthenticated: token != null && token.isNotEmpty));
 }
 
 class EmailAIAgentApp extends StatelessWidget {
-  const EmailAIAgentApp({super.key});
+  final bool isAuthenticated;
+  const EmailAIAgentApp({super.key, required this.isAuthenticated});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Email AI Agent',
+      title: 'Mail Agent',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,
       ),
-      home: const InboxScreen(),
+      home: isAuthenticated ? const InboxScreen() : const LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -113,9 +122,11 @@ class _InboxScreenState extends State<InboxScreen> {
   Future<void> fetchEmails() async {
     setState(() => isLoading = true);
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
-        Uri.parse('https://silver-frogs-shout.loca.lt/api/emails'),
-        headers: {'Bypass-Tunnel-Reminder': 'true'},
+        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/emails'),
+        headers: {'Bypass-Tunnel-Reminder': 'true', 'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -134,9 +145,11 @@ class _InboxScreenState extends State<InboxScreen> {
   Future<void> syncAgent() async {
     setState(() => isLoading = true);
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
       final response = await http.post(
-        Uri.parse('https://silver-frogs-shout.loca.lt/api/refresh'),
-        headers: {'Bypass-Tunnel-Reminder': 'true'},
+        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/refresh'),
+        headers: {'Bypass-Tunnel-Reminder': 'true', 'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         // Sync completed, now fetch the updated emails
@@ -152,11 +165,14 @@ class _InboxScreenState extends State<InboxScreen> {
 
   Future<void> createLabel(String name) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
       await http.post(
-        Uri.parse('https://silver-frogs-shout.loca.lt/api/labels/create'),
+        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/labels/create'),
         headers: {
           'Content-Type': 'application/json',
-          'Bypass-Tunnel-Reminder': 'true'
+          'Bypass-Tunnel-Reminder': 'true',
+          'Authorization': 'Bearer $token'
         },
         body: json.encode({'name': name}),
       );
@@ -168,11 +184,14 @@ class _InboxScreenState extends State<InboxScreen> {
 
   Future<void> createRule(String label, String keyword) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
       await http.post(
-        Uri.parse('https://silver-frogs-shout.loca.lt/api/rules/create'),
+        Uri.parse('${Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000'}/api/rules/create'),
         headers: {
           'Content-Type': 'application/json',
-          'Bypass-Tunnel-Reminder': 'true'
+          'Bypass-Tunnel-Reminder': 'true',
+          'Authorization': 'Bearer $token'
         },
         body: json.encode({'label': label, 'keyword': keyword}),
       );
@@ -256,6 +275,12 @@ class _InboxScreenState extends State<InboxScreen> {
 
   List<dynamic> get filteredEmails {
     if (currentView == 'inbox') return emails;
+    if (currentView == 'recommended') {
+      return emails.where((e) => (e['importance'] ?? 0) > 0).toList();
+    }
+    if (currentView == 'deadlines') {
+      return emails.where((e) => e['deadline'] != null && e['deadline'] != 'NONE' && e['deadline'] != '').toList();
+    }
     if (currentView.startsWith('category:')) {
       final category = currentView.split(':')[1];
       return emails.where((e) => e['category'] == category).toList();
@@ -322,6 +347,22 @@ class _InboxScreenState extends State<InboxScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text('SMART CATEGORIES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.local_fire_department, size: 20),
+                    title: const Text('Recommended'),
+                    onTap: () {
+                      setState(() => currentView = 'recommended');
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today, size: 20),
+                    title: const Text('Deadlines'),
+                    onTap: () {
+                      setState(() => currentView = 'deadlines');
+                      Navigator.pop(context);
+                    },
+                  ),
                   ...categories.keys.map((cat) => ListTile(
                     leading: const Icon(Icons.folder_special, size: 20),
                     title: Text(cat),
@@ -351,6 +392,18 @@ class _InboxScreenState extends State<InboxScreen> {
                     title: const Text('Settings'),
                     onTap: () {
                       Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+                    onTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove('jwt_token');
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
                     },
                   ),
                 ],
@@ -538,7 +591,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       if (emailId == null) return;
       
       final response = await http.get(
-        Uri.parse('https://silver-frogs-shout.loca.lt/api/emails/$emailId'),
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails/$emailId'),
         headers: {'Bypass-Tunnel-Reminder': 'true'},
       );
       

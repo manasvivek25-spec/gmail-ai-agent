@@ -12,8 +12,17 @@ def initialize_database():
     cursor = conn.cursor()
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        user_id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        refresh_token TEXT NOT NULL
+    )
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS emails (
-        email_id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+        email_id TEXT,
         subject TEXT,
         body TEXT,
         category TEXT,
@@ -23,27 +32,33 @@ def initialize_database():
         importance REAL DEFAULT 0,
         received_time BIGINT,
         is_bookmarked INTEGER DEFAULT 0,
-        adaptive_action TEXT
+        adaptive_action TEXT,
+        PRIMARY KEY (user_id, email_id)
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS calendar_events (
-        email_id TEXT PRIMARY KEY,
-        event_name TEXT
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+        email_id TEXT,
+        event_name TEXT,
+        PRIMARY KEY (user_id, email_id)
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_labels (
         id SERIAL PRIMARY KEY,
-        label_name TEXT UNIQUE NOT NULL
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+        label_name TEXT NOT NULL,
+        UNIQUE (user_id, label_name)
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS label_rules (
         id SERIAL PRIMARY KEY,
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
         label_name TEXT NOT NULL,
         keyword TEXT NOT NULL
     )
@@ -51,22 +66,25 @@ def initialize_database():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS email_labels (
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
         email_id TEXT,
         label_name TEXT,
-        PRIMARY KEY (email_id, label_name)
+        PRIMARY KEY (user_id, email_id, label_name)
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS email_tags (
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
         email_id TEXT,
         tag TEXT,
-        PRIMARY KEY (email_id, tag)
+        PRIMARY KEY (user_id, email_id, tag)
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_actions (
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
         email_id TEXT,
         action TEXT,
         action_time TEXT
@@ -75,8 +93,10 @@ def initialize_database():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_interests (
-        keyword TEXT PRIMARY KEY,
-        score INTEGER DEFAULT 1
+        user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+        keyword TEXT,
+        score INTEGER DEFAULT 1,
+        PRIMARY KEY (user_id, keyword)
     )
     """)
 
@@ -84,7 +104,8 @@ def initialize_database():
     cursor.close()
     conn.close()
 
-    print("PostgreSQL (Supabase) Database initialized successfully.")
+    print("Multi-tenant PostgreSQL Database initialized successfully.")
 
 if __name__ == "__main__":
     initialize_database()
+

@@ -5,7 +5,8 @@ def new_getaddrinfo(*args, **kwargs):
     return [response for response in responses if response[0] == socket.AF_INET]
 socket.getaddrinfo = new_getaddrinfo
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from auth import router as auth_router, get_current_user
 from fastapi.middleware.cors import CORSMiddleware
 import email_memory
 import ai_assistant
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI):
     # Shutdown logic if needed
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(auth_router)
 
 # Enable CORS for the React frontend
 app.add_middleware(
@@ -58,43 +60,43 @@ app.add_middleware(
 )
 
 @app.get("/api/emails")
-def get_emails(limit: int = 50):
-    return email_memory.get_all_emails_metadata(limit)
+def get_emails(limit: int = 50, user_id: str = Depends(get_current_user)):
+    return email_memory.get_all_emails_metadata(user_id, limit)
 
 @app.get("/api/emails/{email_id}")
-def get_email_details(email_id: str):
-    data = email_memory.get_email_details(email_id)
+def get_email_details(email_id: str, user_id: str = Depends(get_current_user)):
+    data = email_memory.get_email_details(user_id, email_id)
     if not data:
         raise HTTPException(status_code=404, detail="Email not found")
     
     data["email_id"] = email_id
-    data["tags"] = email_memory.get_email_tags(email_id)
-    data["labels"] = email_memory.get_email_labels(email_id)
-    email_memory.record_action(email_id, "opened")
+    data["tags"] = email_memory.get_email_tags(user_id, email_id)
+    data["labels"] = email_memory.get_email_labels(user_id, email_id)
+    email_memory.record_action(user_id, email_id, "opened")
     for tag in data["tags"]:
-        email_memory.update_interest(tag)
+        email_memory.update_interest(user_id, tag)
         
     return data
 
 @app.get("/api/deadlines")
-def get_deadlines():
-    return email_memory.get_all_deadlines()
+def get_deadlines(user_id: str = Depends(get_current_user)):
+    return email_memory.get_all_deadlines(user_id, )
 
 @app.get("/api/recommended")
-def get_recommended():
-    return email_memory.get_recommended_emails_metadata()
+def get_recommended(user_id: str = Depends(get_current_user)):
+    return email_memory.get_recommended_emails_metadata(user_id, )
 
 @app.get("/api/categories")
-def get_categories():
-    return email_memory.get_category_counts()
+def get_categories(user_id: str = Depends(get_current_user)):
+    return email_memory.get_category_counts(user_id, )
 
 @app.get("/api/analytics")
-def get_analytics():
-    top_interests = [row[0] for row in email_memory.get_top_interests(5)]
-    top_tags = email_memory.get_top_tags(10)
-    emails_processed = email_memory.get_email_count()
-    labels_count = len(email_memory.get_all_labels())
-    deadlines_count = len(email_memory.get_all_deadlines())
+def get_analytics(user_id: str = Depends(get_current_user)):
+    top_interests = [row[0] for row in email_memory.get_top_interests(user_id, 5)]
+    top_tags = email_memory.get_top_tags(user_id, 10)
+    emails_processed = email_memory.get_email_count(user_id, )
+    labels_count = len(email_memory.get_all_labels(user_id, ))
+    deadlines_count = len(email_memory.get_all_deadlines(user_id, ))
     
     return {
         "top_interests": top_interests,
@@ -105,44 +107,44 @@ def get_analytics():
     }
 
 @app.get("/api/categories/{category_name}")
-def get_emails_by_category(category_name: str):
-    email_ids = email_memory.get_emails_by_category(category_name)
-    return email_memory.get_emails_metadata_by_ids(email_ids)
+def get_emails_by_category(category_name: str, user_id: str = Depends(get_current_user)):
+    email_ids = email_memory.get_emails_by_category(user_id, category_name)
+    return email_memory.get_emails_metadata_by_ids(user_id, email_ids)
 
 @app.get("/api/labels")
-def get_labels():
-    return email_memory.get_labels()
+def get_labels(user_id: str = Depends(get_current_user)):
+    return email_memory.get_labels(user_id, )
 
 @app.get("/api/labels/{label_name}")
-def get_emails_by_label(label_name: str):
-    email_ids = email_memory.get_emails_for_label(label_name)
-    return email_memory.get_emails_metadata_by_ids(email_ids)
+def get_emails_by_label(label_name: str, user_id: str = Depends(get_current_user)):
+    email_ids = email_memory.get_emails_for_label(user_id, label_name)
+    return email_memory.get_emails_metadata_by_ids(user_id, email_ids)
 
 @app.get("/api/starred")
-def get_starred():
+def get_starred(user_id: str = Depends(get_current_user)):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT email_id FROM emails WHERE is_bookmarked = 1 ORDER BY received_time DESC")
+    cursor.execute("SELECT email_id FROM emails WHERE user_id=%s AND is_bookmarked = 1 ORDER BY received_time DESC", (user_id,))
     email_ids = [row[0] for row in cursor.fetchall()]
     conn.close()
-    return email_memory.get_emails_metadata_by_ids(email_ids)
+    return email_memory.get_emails_metadata_by_ids(user_id, email_ids)
 
 @app.post("/api/toggle-bookmark/{email_id}")
-def toggle_bookmark(email_id: str):
-    email_memory.toggle_bookmark(email_id)
+def toggle_bookmark(email_id: str, user_id: str = Depends(get_current_user)):
+    email_memory.toggle_bookmark(user_id, email_id)
     return {"status": "success"}
 
 @app.post("/api/search")
-def ai_search(query: dict):
+def ai_search(query: dict, user_id: str = Depends(get_current_user)):
     q = query.get("query")
     if not q:
         return []
     results = execute_nl_query(q)
     email_ids = [row[0] for row in results]
-    return email_memory.get_emails_metadata_by_ids(email_ids)
+    return email_memory.get_emails_metadata_by_ids(user_id, email_ids)
 
 @app.post("/api/ask")
-def ai_assistant_ask(query: dict):
+def ai_assistant_ask(query: dict, user_id: str = Depends(get_current_user)):
     q = query.get("query")
     if not q:
         return {"response": "Please provide a query"}
@@ -150,34 +152,48 @@ def ai_assistant_ask(query: dict):
     return {"response": response}
 
 @app.post("/api/labels/create")
-def api_create_label(req: LabelRequest):
+def api_create_label(req: LabelRequest, user_id: str = Depends(get_current_user)):
     try:
-        email_memory.create_label(req.name)
+        email_memory.create_label(user_id, req.name)
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 @app.post("/api/rules/create")
-def api_create_rule(req: RuleRequest):
+def api_create_rule(req: RuleRequest, user_id: str = Depends(get_current_user)):
     try:
-        email_memory.add_rule(req.label, req.keyword)
+        email_memory.add_rule(user_id, req.label, req.keyword)
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+from fastapi import BackgroundTasks
+
 @app.post("/api/refresh")
-def refresh_emails():
+def refresh_emails(background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     try:
-        with open("automation_log.txt", "w") as f:
-            process = subprocess.run([sys.executable, "main.py"], stdout=f, stderr=subprocess.STDOUT, text=True, encoding="utf-8")
-        if process.returncode != 0:
-            return {"status": "error", "message": "Sync failed. Check /api/logs"}
-        return {"status": "success"}
+        from main import process_user
+        from database import get_db_connection
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT refresh_token FROM users WHERE user_id = %s", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            return {"status": "error", "message": "User not found"}
+            
+        refresh_token = row[0]
+        
+        background_tasks.add_task(process_user, user_id, refresh_token)
+        
+        return {"status": "success", "message": "Sync started in the background. Emails will appear shortly."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 @app.get("/api/logs")
-def get_logs():
+def get_logs(user_id: str = Depends(get_current_user)):
     try:
         with open("automation_log.txt", "r") as f:
             return {"logs": f.read()}
@@ -185,7 +201,7 @@ def get_logs():
         return {"logs": "No logs available."}
 
 @app.post("/api/run-automations")
-def run_automations_api():
+def run_automations_api(user_id: str = Depends(get_current_user)):
     try:
         from automation_engine import run_all_automations
         run_all_automations()

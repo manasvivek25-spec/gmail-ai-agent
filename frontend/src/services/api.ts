@@ -1,7 +1,14 @@
-
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:8000/api';
+
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('jwt_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const api = {
   getEmails: () => axios.get(`${API_BASE}/emails`),

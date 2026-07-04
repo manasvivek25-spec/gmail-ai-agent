@@ -4,7 +4,7 @@ import psycopg2.extras
 from datetime import datetime
 
 
-def email_exists(email_id):
+def email_exists(user_id, email_id):
 
     try:
 
@@ -16,9 +16,9 @@ def email_exists(email_id):
                 """
                 SELECT email_id
                 FROM emails
-                WHERE email_id=%s
+                WHERE user_id=%s AND email_id=%s
                 """,
-                (email_id,)
+                (user_id, email_id)
             )
 
             result = cursor.fetchone()
@@ -35,6 +35,7 @@ def email_exists(email_id):
 
 
 def save_email(
+    user_id,
     email_id,
     subject,
     body,
@@ -64,6 +65,7 @@ def save_email(
 
             cursor.execute("""
 INSERT INTO emails (
+    user_id,
     email_id,
     subject,
     body,
@@ -75,8 +77,8 @@ INSERT INTO emails (
     received_time,
     adaptive_action
 )
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-ON CONFLICT (email_id) DO UPDATE SET
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+ON CONFLICT (user_id, email_id) DO UPDATE SET
     subject = EXCLUDED.subject,
     body = EXCLUDED.body,
     category = EXCLUDED.category,
@@ -88,6 +90,7 @@ ON CONFLICT (email_id) DO UPDATE SET
     adaptive_action = EXCLUDED.adaptive_action
 """,
 (
+    user_id,
     email_id,
     subject,
     body,
@@ -113,7 +116,7 @@ ON CONFLICT (email_id) DO UPDATE SET
         )
 
 
-def get_email_count():
+def get_email_count(user_id):
 
     try:
 
@@ -137,7 +140,7 @@ def get_email_count():
         )
 
         return 0
-def create_label(label_name):
+def create_label(user_id, label_name):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -147,29 +150,29 @@ def create_label(label_name):
         label_name
     )
     VALUES (%s)
-    ON CONFLICT (label_name) DO NOTHING
-    """, (label_name,))
+    ON CONFLICT (user_id, label_name) DO NOTHING
+    """, (user_id, label_name))
 
     conn.commit()
     conn.close()
-def delete_label(label_name):
+def delete_label(user_id, label_name):
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     DELETE FROM user_labels
-    WHERE label_name=%s
-    """, (label_name,))
+    WHERE user_id=%s AND label_name=%s
+    """, (user_id, label_name))
 
     cursor.execute("""
     DELETE FROM label_rules
-    WHERE label_name=%s
-    """, (label_name,))
+    WHERE user_id=%s AND label_name=%s
+    """, (user_id, label_name))
 
     conn.commit()
     conn.close()
-def get_labels():
+def get_labels(user_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -196,7 +199,7 @@ def add_rule(
     cursor.execute("""
     SELECT 1
     FROM label_rules
-    WHERE label_name=%s
+    WHERE user_id=%s AND label_name=%s
     AND keyword=%s
     """,
     (
@@ -223,7 +226,7 @@ def add_rule(
         conn.commit()
 
     conn.close()
-def get_rules(label_name):
+def get_rules(user_id, label_name):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -231,8 +234,8 @@ def get_rules(label_name):
     cursor.execute("""
     SELECT keyword
     FROM label_rules
-    WHERE label_name=%s
-    """, (label_name,))
+    WHERE user_id=%s AND label_name=%s
+    """, (user_id, label_name))
 
     rows = cursor.fetchall()
 
@@ -242,7 +245,7 @@ def get_rules(label_name):
         row[0]
         for row in rows
     ]
-def assign_label(email_id, label_name):
+def assign_label(user_id, email_id, label_name):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -253,7 +256,7 @@ def assign_label(email_id, label_name):
         label_name
     )
     VALUES (%s, %s)
-    ON CONFLICT (email_id, label_name) DO NOTHING
+    ON CONFLICT (user_id, email_id, label_name) DO NOTHING
     """, (
         email_id,
         label_name
@@ -261,7 +264,7 @@ def assign_label(email_id, label_name):
 
     conn.commit()
     conn.close()
-def get_emails_for_label(label_name):
+def get_emails_for_label(user_id, label_name):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -269,8 +272,8 @@ def get_emails_for_label(label_name):
     cursor.execute("""
     SELECT email_id
     FROM email_labels
-    WHERE label_name=%s
-    """, (label_name,))
+    WHERE user_id=%s AND label_name=%s
+    """, (user_id, label_name))
 
     rows = cursor.fetchall()
 
@@ -278,7 +281,7 @@ def get_emails_for_label(label_name):
 
     return [row[0] for row in rows]
 
-def get_all_labels():
+def get_all_labels(user_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -308,7 +311,7 @@ def save_tag(
         tag
     )
     VALUES (%s, %s)
-    ON CONFLICT (email_id, tag) DO NOTHING
+    ON CONFLICT (user_id, email_id, tag) DO NOTHING
     """,
     (
         email_id,
@@ -357,7 +360,7 @@ def get_action_score(
     cursor.execute("""
     SELECT COUNT(*)
     FROM user_actions
-    WHERE email_id=%s
+    WHERE user_id=%s AND email_id=%s
     """,
     (
         email_id,
@@ -370,7 +373,7 @@ def get_action_score(
     return score
 
 
-def get_deadline_score(deadline):
+def get_deadline_score(user_id, deadline):
     if deadline == "NONE" or deadline == "":
         return 0
     try:
@@ -419,10 +422,10 @@ def calculate_importance(
     )
     return importance
 
-def recalculate_email_importance(email_id):
+def recalculate_email_importance(user_id, email_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT relevance, deadline, received_time, is_bookmarked FROM emails WHERE email_id=%s", (email_id,))
+    cursor.execute("SELECT relevance, deadline, received_time, is_bookmarked FROM emails WHERE user_id=%s AND email_id=%s", (user_id, email_id))
     row = cursor.fetchone()
     if not row:
         conn.close()
@@ -430,7 +433,7 @@ def recalculate_email_importance(email_id):
     relevance, deadline, received_time, is_bookmarked = row
 
     # Get interest score from tags
-    cursor.execute("SELECT tag_name FROM email_tags WHERE email_id=%s", (email_id,))
+    cursor.execute("SELECT tag_name FROM email_tags WHERE user_id=%s AND email_id=%s", (user_id, email_id))
     tags = [t[0] for t in cursor.fetchall()]
     interest_score = 0
     for tag in tags:
@@ -447,19 +450,19 @@ def recalculate_email_importance(email_id):
         is_bookmarked=is_bookmarked
     )
     
-    cursor.execute("UPDATE emails SET importance=%s WHERE email_id=%s", (new_importance, email_id))
+    cursor.execute("UPDATE emails SET importance=%s WHERE user_id=%s AND email_id=%s", (new_importance, email_id))
     conn.commit()
     conn.close()
 
-def toggle_bookmark(email_id):
+def toggle_bookmark(user_id, email_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     UPDATE emails
     SET is_bookmarked = 1 - is_bookmarked
-    WHERE email_id=%s
-    """, (email_id,))
+    WHERE user_id=%s AND email_id=%s
+    """, (user_id, email_id))
 
     conn.commit()
     conn.close()
@@ -475,7 +478,7 @@ def delete_rule(
 
     cursor.execute("""
     DELETE FROM label_rules
-    WHERE label_name=%s
+    WHERE user_id=%s AND label_name=%s
     AND keyword=%s
     """,
     (
@@ -495,7 +498,7 @@ def count_emails_for_label(
     cursor.execute("""
     SELECT COUNT(*)
     FROM email_labels
-    WHERE label_name=%s
+    WHERE user_id=%s AND label_name=%s
     """,
     (
         label_name,
@@ -506,7 +509,7 @@ def count_emails_for_label(
     conn.close()
 
     return count
-def get_email_tags(email_id):
+def get_email_tags(user_id, email_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -514,9 +517,9 @@ def get_email_tags(email_id):
     cursor.execute("""
     SELECT tag
     FROM email_tags
-    WHERE email_id=%s
+    WHERE user_id=%s AND email_id=%s
     """,
-    (email_id,))
+    (user_id, email_id))
 
     rows = cursor.fetchall()
 
@@ -526,7 +529,7 @@ def get_email_tags(email_id):
         row[0]
         for row in rows
     ]
-def get_email_labels(email_id):
+def get_email_labels(user_id, email_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -534,9 +537,9 @@ def get_email_labels(email_id):
     cursor.execute("""
     SELECT label_name
     FROM email_labels
-    WHERE email_id=%s
+    WHERE user_id=%s AND email_id=%s
     """,
-    (email_id,))
+    (user_id, email_id))
 
     rows = cursor.fetchall()
 
@@ -546,7 +549,7 @@ def get_email_labels(email_id):
         row[0]
         for row in rows
     ]
-def update_interest(tag):
+def update_interest(user_id, tag):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -562,11 +565,11 @@ def update_interest(tag):
     DO UPDATE SET
     score = user_interests.score + 1
     """,
-    (tag,))
+    (user_id, tag))
 
     conn.commit()
     conn.close()
-def get_interest_score(tag):
+def get_interest_score(user_id, tag):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -576,14 +579,14 @@ def get_interest_score(tag):
     FROM user_interests
     WHERE keyword=%s
     """,
-    (tag,))
+    (user_id, tag))
 
     row = cursor.fetchone()
 
     conn.close()
 
     return row[0] if row else 0
-def get_top_interests(limit=5):
+def get_top_interests(user_id, limit=5):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -594,7 +597,7 @@ def get_top_interests(limit=5):
     FROM user_interests
     ORDER BY score DESC
     LIMIT %s
-    """, (limit,))
+    """, (user_id, limit))
 
     rows = cursor.fetchall()
 
@@ -603,7 +606,7 @@ def get_top_interests(limit=5):
     return rows
 
 
-def get_top_tags(limit=10):
+def get_top_tags(user_id, limit=10):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -613,13 +616,13 @@ def get_top_tags(limit=10):
     GROUP BY tag
     ORDER BY count DESC
     LIMIT %s
-    """, (limit,))
+    """, (user_id, limit))
     rows = cursor.fetchall()
     conn.close()
     return [row[0] for row in rows]
 
 
-def get_all_emails_metadata(limit=50):
+def get_all_emails_metadata(user_id, limit=50):
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -636,7 +639,7 @@ def get_all_emails_metadata(limit=50):
     WHERE category != 'PHD_SEMINAR'
     ORDER BY received_time DESC
     LIMIT %s
-    """, (limit,))
+    """, (user_id, limit))
 
     rows = cursor.fetchall()
     conn.close()
@@ -668,7 +671,7 @@ def get_all_emails_metadata(limit=50):
     return emails
 
 
-def get_emails_metadata_by_ids(email_ids):
+def get_emails_metadata_by_ids(user_id, email_ids):
 
     if not email_ids:
         return []
@@ -721,7 +724,7 @@ def get_emails_metadata_by_ids(email_ids):
     return emails
 
 
-def get_recommended_emails_metadata(limit=20):
+def get_recommended_emails_metadata(user_id, limit=20):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -738,7 +741,7 @@ def get_recommended_emails_metadata(limit=20):
     FROM emails
     ORDER BY importance DESC
     LIMIT %s
-    """, (limit,))
+    """, (user_id, limit))
 
     rows = cursor.fetchall()
     conn.close()
@@ -770,7 +773,7 @@ def get_recommended_emails_metadata(limit=20):
     return emails
 
 
-def get_email_details(email_id):
+def get_email_details(user_id, email_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -784,8 +787,8 @@ def get_email_details(email_id):
            relevance,
            category
     FROM emails
-    WHERE email_id=%s
-    """, (email_id,))
+    WHERE user_id=%s AND email_id=%s
+    """, (user_id, email_id))
 
     row = cursor.fetchone()
     conn.close()
@@ -804,7 +807,7 @@ def get_email_details(email_id):
     }
 
 
-def get_all_deadlines():
+def get_all_deadlines(user_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -864,7 +867,7 @@ def get_all_deadlines():
     return deadlines
 
 
-def get_category_counts():
+def get_category_counts(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -878,15 +881,15 @@ def get_category_counts():
     conn.close()
     return {row[0]: row[1] for row in rows}
 
-def get_emails_by_category(category):
+def get_emails_by_category(user_id, category):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
     SELECT email_id
     FROM emails
-    WHERE category=%s
+    WHERE user_id=%s AND category=%s
     ORDER BY received_time DESC
-    """, (category,))
+    """, (user_id, category))
     rows = cursor.fetchall()
     conn.close()
     return [row[0] for row in rows]
