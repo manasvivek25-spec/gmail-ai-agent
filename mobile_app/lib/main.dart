@@ -612,9 +612,14 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       final emailId = widget.email['email_id'] ?? widget.email['id'];
       if (emailId == null) return;
       
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
         Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails/$emailId'),
-        headers: {'Bypass-Tunnel-Reminder': 'true'},
+        headers: {
+          'Bypass-Tunnel-Reminder': 'true',
+          'Authorization': 'Bearer $token'
+        },
       );
       
       if (response.statusCode == 200) {
