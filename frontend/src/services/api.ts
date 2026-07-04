@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'https://gmail-ai-agent-ih4e.onrender.com/api';
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('jwt_token');
