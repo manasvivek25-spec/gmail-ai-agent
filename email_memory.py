@@ -14,7 +14,7 @@ def email_exists(user_id, email_id):
 
             cursor.execute(
                 """
-                SELECT email_id
+                SELECT summary
                 FROM emails
                 WHERE user_id=%s AND email_id=%s
                 """,
@@ -23,7 +23,11 @@ def email_exists(user_id, email_id):
 
             result = cursor.fetchone()
 
-            return result is not None
+            if result:
+                if result[0] == "AI Analysis Pending / Skipped":
+                    return False
+                return True
+            return False
 
     except Exception as e:
 
@@ -180,8 +184,9 @@ def get_labels(user_id):
     cursor.execute("""
     SELECT label_name
     FROM user_labels
+    WHERE user_id=%s
     ORDER BY label_name
-    """)
+    """, (user_id,))
 
     labels = cursor.fetchall()
 
@@ -189,6 +194,7 @@ def get_labels(user_id):
 
     return [row[0] for row in labels]
 def add_rule(
+    user_id,
     label_name,
     keyword
 ):
