@@ -40,7 +40,7 @@ def get_current_user(request: Request):
         raise HTTPException(status_code=401, detail='Invalid token')
 
 @router.get('/auth/google/url')
-def get_auth_url():
+def get_auth_url(platform: str = "web"):
     import urllib.parse
     base_url = "https://accounts.google.com/o/oauth2/v2/auth"
     params = {
@@ -49,13 +49,14 @@ def get_auth_url():
         "response_type": "code",
         "scope": " ".join(SCOPES),
         "access_type": "offline",
-        "prompt": "consent"
+        "prompt": "consent",
+        "state": platform
     }
     auth_url = f"{base_url}?{urllib.parse.urlencode(params)}"
     return {"url": auth_url}
 
 @router.get('/auth/google/callback')
-def auth_callback(code: str):
+def auth_callback(code: str, state: str = "web"):
     import requests
     
     token_url = "https://oauth2.googleapis.com/token"
@@ -64,7 +65,7 @@ def auth_callback(code: str):
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
         "redirect_uri": REDIRECT_URI,
-        "grant_type": "authorization_code",
+        "grant_type": "authorization_code"
     }
     r = requests.post(token_url, data=data)
     token_data = r.json()
@@ -81,7 +82,6 @@ def auth_callback(code: str):
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        # If the user logs in again and doesn't get a new refresh token (Google only sends it on first login), keep the old one!
         if refresh_token:
             cursor.execute(
                 'INSERT INTO users (user_id, email, refresh_token) VALUES (%s, %s, %s) ON CONFLICT (user_id) DO UPDATE SET refresh_token = EXCLUDED.refresh_token',
@@ -96,6 +96,10 @@ def auth_callback(code: str):
 
     token = jwt.encode({'user_id': user_id}, JWT_SECRET, algorithm='HS256')
     
+    if state == "mobile":
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(f"gmailaiagent://auth?token={token}")
+
     html = f"""
     <html>
         <head>
