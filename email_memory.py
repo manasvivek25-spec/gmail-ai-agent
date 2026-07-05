@@ -580,12 +580,13 @@ def update_interest(user_id, tag):
 
     cursor.execute("""
     INSERT INTO user_interests(
+        user_id,
         keyword,
         score
     )
-    VALUES(%s,1)
+    VALUES(%s,%s,1)
 
-    ON CONFLICT(keyword)
+    ON CONFLICT(user_id, keyword)
     DO UPDATE SET
     score = user_interests.score + 1
     """,
@@ -601,9 +602,8 @@ def get_interest_score(user_id, tag):
     cursor.execute("""
     SELECT score
     FROM user_interests
-    WHERE keyword=%s
-    """,
-    (user_id, tag))
+    WHERE user_id=%s AND keyword=%s
+    """, (user_id, tag))
 
     row = cursor.fetchone()
 
