@@ -194,7 +194,8 @@ function App() {
           <button 
             onClick={async () => {
               try {
-                const res = await fetch('https://gmail-ai-agent-ih4e.onrender.com/auth/google/url?platform=web');
+                const origin = window.location.origin;
+                const res = await fetch(`https://gmail-ai-agent-ih4e.onrender.com/auth/google/url?platform=${encodeURIComponent(origin)}`);
                 const data = await res.json();
                 if (data.url) {
                   window.location.href = data.url;

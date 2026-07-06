@@ -99,6 +99,10 @@ def auth_callback(code: str, state: str = "web"):
     if state == "mobile":
         from fastapi.responses import RedirectResponse
         return RedirectResponse(f"gmailaiagent://auth?token={token}")
+        
+    if state.startswith("http://") or state.startswith("https://") or state.startswith("tauri://"):
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(f"{state}/?token={token}")
 
     html = f"""
     <html>
