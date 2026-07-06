@@ -179,27 +179,41 @@ function App() {
   };
   if (!token) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground transition-colors duration-300">
-        <div className="max-w-md p-10 text-center bg-card rounded-[2rem] border border-border shadow-2xl flex flex-col items-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <div className="w-24 h-24 bg-accent rounded-full flex items-center justify-center mb-8 relative shadow-inner">
-            <div className="absolute inset-0 rounded-full bg-primary/20 scale-0 group-hover:scale-[1.8] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 blur-xl" />
-            <Bot className="text-primary w-12 h-12 relative z-10" />
+      <div className="flex h-screen w-full items-center justify-center bg-[#09090B] text-white">
+        <div className="max-w-md p-8 flex flex-col items-center w-full">
+          <div className="w-[100px] h-[100px] flex items-center justify-center rounded-full bg-blue-500/10 border-2 border-blue-500/30 mb-8">
+            <Bot className="text-blue-500 w-[50px] h-[50px]" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-3">Mail Agent</h1>
-          <p className="text-muted-foreground mb-10 text-sm leading-relaxed">
-            Welcome to the future of email. Sign in with Google to securely sync your inbox with your personal AI assistant.
+          
+          <h1 className="text-4xl font-bold tracking-tight text-white mb-4 tracking-tighter">Mail Agent</h1>
+          
+          <p className="text-white/70 text-center text-sm leading-relaxed mb-12">
+            Your intelligent, multi-tenant AI email assistant. Sign in to seamlessly sync your inbox across all platforms.
           </p>
-          <Button 
+          
+          <button 
             onClick={async () => {
-              const res = await fetch('http://localhost:8000/auth/google/url');
-              const data = await res.json();
-              window.location.href = data.url;
+              try {
+                const res = await fetch('https://gmail-ai-agent-ih4e.onrender.com/auth/google/url?platform=web');
+                const data = await res.json();
+                if (data.url) {
+                  window.location.href = data.url;
+                }
+              } catch (e) {
+                console.error('Login failed', e);
+              }
             }} 
-            className="w-full font-bold h-14 text-sm shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all rounded-xl relative z-10"
+            className="flex items-center justify-center gap-4 w-auto px-6 h-14 bg-white hover:bg-gray-50 text-black rounded-[30px] border border-gray-300 transition-colors shadow-sm cursor-pointer"
           >
-            Sign In with Google
-          </Button>
+            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+              <span className="text-[#4285F4] font-bold text-xl leading-none">G</span>
+            </div>
+            <span className="text-base font-semibold text-gray-800">Continue with Google</span>
+          </button>
+
+          <p className="text-white/30 text-xs text-center leading-relaxed mt-8">
+            By signing in, you agree to our Terms of Service and Privacy Policy.
+          </p>
         </div>
       </div>
     );
