@@ -10,7 +10,6 @@ import {
   Mail,
   Smartphone,
   MessageCircle,
-  Globe,
   Plus,
   Moon,
   Sun,
