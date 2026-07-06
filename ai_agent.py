@@ -61,6 +61,7 @@ Priority Rules (LOW, MEDIUM, HIGH, CRITICAL):
 - MEDIUM: Event emails.
 - LOW: Mess emails or IGNORE category.
 - PhD Seminars should be LOW priority as they will be filtered away anyway.
+- You MUST ALWAYS include the "priority" key in your JSON output.
 
 Summary Rules:
 - Generate a natural, conversational 2-3 sentence brief summarizing the core intent of the email.
@@ -86,13 +87,13 @@ Email Body:
 
 Return ONLY:
 {{
-  "category":"",
-  "tags":[],
-  "priority":"",
-  "summary":"",
-  "deadline":"",
-  "relevance":0,
-  "adaptive_action":""
+  "category": "INTERNSHIP | ACADEMIC | MESS | EVENT | PHD_SEMINAR | IGNORE",
+  "tags": ["keyword1", "keyword2"],
+  "priority": "LOW | MEDIUM | HIGH | CRITICAL",
+  "summary": "You have received...",
+  "deadline": "YYYY-MM-DD or NONE",
+  "relevance": 5,
+  "adaptive_action": "ARCHIVE | STAR | MARK_READ | NONE"
 }}
 """
 

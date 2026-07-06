@@ -82,6 +82,10 @@ def process_user(user_id, refresh_token):
             ai_importance = 0
             ai_action = "NONE"
 
+            if processed_count >= 5:
+                print("Batch limit reached (5). Waiting for next cycle to respect rate limits.")
+                break
+                
             if not ai_limit_reached:
                 try:
                     result = analyze_email(email["subject"], email["body"][:3000])
@@ -114,6 +118,8 @@ def process_user(user_id, refresh_token):
                     ai_importance = calculate_importance(user_id, result, email)
                     ai_action = result.get("adaptive_action", "NONE")
                 except Exception as e:
+                    if "RATE_LIMIT" in str(e):
+                        raise
                     print(f"AI Processing Skipped/Failed for {email['subject']}: {e}")
 
             save_email(

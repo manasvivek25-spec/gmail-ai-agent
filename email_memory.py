@@ -24,7 +24,7 @@ def email_exists(user_id, email_id):
             result = cursor.fetchone()
 
             if result:
-                if result[0] == "AI Analysis Pending / Skipped":
+                if result[0] == "AI Analysis Pending / Skipped" or result[0].startswith("AI Error:"):
                     return False
                 return True
             return False
