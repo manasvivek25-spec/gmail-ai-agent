@@ -280,9 +280,11 @@ def get_emails_for_label(user_id, label_name):
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT email_id
-    FROM email_labels
-    WHERE user_id=%s AND label_name=%s
+    SELECT e.email_id
+    FROM email_labels el
+    JOIN emails e ON el.email_id = e.email_id AND el.user_id = e.user_id
+    WHERE el.user_id=%s AND el.label_name=%s
+    ORDER BY NULLIF(NULLIF(e.deadline, 'NONE'), '') ASC NULLS LAST, e.received_time DESC
     """, (user_id, label_name))
 
     rows = cursor.fetchall()
