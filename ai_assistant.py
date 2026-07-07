@@ -87,17 +87,20 @@ ASSISTANT RESPONSE:
 """
 
     try:
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=120
+        import os
+        from groq import Groq
+        
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        
+        completion = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
         )
-        response.raise_for_status()
-        data = response.json()
-        return data["response"].strip()
+        
+        return completion.choices[0].message.content.strip()
     except Exception as e:
         return f"Error: {e}"

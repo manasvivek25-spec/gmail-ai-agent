@@ -112,7 +112,15 @@ Return ONLY:
             response_format={"type": "json_object"}
         )
 
-        result_text = completion.choices[0].message.content
+        result_text = completion.choices[0].message.content.strip()
+        if result_text.startswith("```json"):
+            result_text = result_text[7:]
+        elif result_text.startswith("```"):
+            result_text = result_text[3:]
+        if result_text.endswith("```"):
+            result_text = result_text[:-3]
+        result_text = result_text.strip()
+        
         result = json.loads(result_text)
 
         required_keys = [
