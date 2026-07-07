@@ -170,7 +170,7 @@ def api_create_rule(req: RuleRequest, user_id: str = Depends(get_current_user)):
 from fastapi import BackgroundTasks
 
 @app.post("/api/refresh")
-def refresh_emails(background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+def refresh_emails(user_id: str = Depends(get_current_user)):
     try:
         from main import process_user
         from database import get_db_connection
@@ -186,9 +186,10 @@ def refresh_emails(background_tasks: BackgroundTasks, user_id: str = Depends(get
             
         refresh_token = row[0]
         
-        background_tasks.add_task(process_user, user_id, refresh_token)
+        # Run synchronously so the client waits for the sync to complete before refetching
+        process_user(user_id, refresh_token)
         
-        return {"status": "success", "message": "Sync started in the background. Emails will appear shortly."}
+        return {"status": "success", "message": "Sync completed successfully. Inbox updated."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
