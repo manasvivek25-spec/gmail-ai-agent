@@ -201,6 +201,23 @@ def get_logs(user_id: str = Depends(get_current_user)):
     except Exception:
         return {"logs": "No logs available."}
 
+@app.get("/api/cron")
+def run_cron_jobs(token: str = None, background_tasks: BackgroundTasks = None):
+    # Basic security so random people can't trigger your AI agent
+    if token != "cron_secret_123":
+        return {"status": "error", "message": "Unauthorized"}
+        
+    try:
+        from main import main as run_all_users
+        if background_tasks:
+            background_tasks.add_task(run_all_users)
+            return {"status": "success", "message": "Global sync started in background"}
+        else:
+            run_all_users()
+            return {"status": "success", "message": "Global sync completed synchronously"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.post("/api/run-automations")
 def run_automations_api(user_id: str = Depends(get_current_user)):
     try:
