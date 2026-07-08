@@ -98,18 +98,18 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
             <p className="text-[15px] text-foreground leading-relaxed font-medium relative z-10">
               {email.summary}
             </p>
-            
-            {email.deadline && email.deadline !== 'NONE' && (
-              <div className="relative z-10 mt-6 pt-5 border-t border-primary/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar size={14} className="text-red-500" />
-                  <h3 className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Actionable Deadline</h3>
-                </div>
-                <p className="text-[15px] font-bold text-foreground">
-                  {email.deadline}
-                </p>
+            <div className="relative z-10 mt-6 pt-5 border-t border-primary/10">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar size={14} className="text-red-500" />
+                <h3 className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Actionable Deadline</h3>
               </div>
-            )}
+              <p className={cn(
+                "text-[15px] font-bold",
+                (!email.deadline || email.deadline === 'NONE') ? "text-muted-foreground" : "text-foreground"
+              )}>
+                {(!email.deadline || email.deadline === 'NONE') ? "NIL" : email.deadline}
+              </p>
+            </div>
           </div>
 
           <div className="mt-6">

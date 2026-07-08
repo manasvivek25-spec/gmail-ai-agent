@@ -729,18 +729,16 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
               style: const TextStyle(fontSize: 18, color: Colors.black87, height: 1.5, fontWeight: FontWeight.w500),
             ),
             
-            if (_fullDeadline != 'NONE' && _fullDeadline.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              const Text('DEADLINE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent, letterSpacing: 1.5)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.redAccent, size: 20),
-                  const SizedBox(width: 8),
-                  Text(_fullDeadline, style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ],
+            const SizedBox(height: 24),
+            const Text('DEADLINE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent, letterSpacing: 1.5)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.calendar_today, color: (_fullDeadline == 'NONE' || _fullDeadline.isEmpty) ? Colors.grey : Colors.redAccent, size: 20),
+                const SizedBox(width: 8),
+                Text((_fullDeadline == 'NONE' || _fullDeadline.isEmpty) ? 'NIL' : _fullDeadline, style: TextStyle(fontSize: 16, color: (_fullDeadline == 'NONE' || _fullDeadline.isEmpty) ? Colors.grey : Colors.black87, fontWeight: FontWeight.w600)),
+              ],
+            ),
             
             if (labels.isNotEmpty || tags.isNotEmpty) ...[
               const SizedBox(height: 32),
