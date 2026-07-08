@@ -5,7 +5,8 @@ import {
   Share2, 
   MoreHorizontal,
   Mail,
-  Zap
+  Zap,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmailDetails } from '@/types';
@@ -97,21 +98,21 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
             <p className="text-[15px] text-foreground leading-relaxed font-medium relative z-10">
               {email.summary}
             </p>
+            
+            {email.deadline && email.deadline !== 'NONE' && (
+              <div className="relative z-10 mt-6 pt-5 border-t border-primary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar size={14} className="text-red-500" />
+                  <h3 className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Actionable Deadline</h3>
+                </div>
+                <p className="text-[15px] font-bold text-foreground">
+                  {email.deadline}
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <Card className="bg-secondary/10 border-secondary/20 shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <h3 className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-3">Actionable Deadline</h3>
-                <p className={cn(
-                  "text-base font-bold",
-                  email.deadline && email.deadline !== 'NONE' ? "text-secondary" : "text-muted-foreground"
-                )}>
-                  {email.deadline && email.deadline !== 'NONE' ? email.deadline : 'No deadline detected'}
-                </p>
-              </CardContent>
-            </Card>
-
+          <div className="mt-6">
             <Card className="bg-accent/50 border-border shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-6 flex items-start gap-4">
                 <div className="bg-card p-2 rounded-lg shadow-sm border border-border">
