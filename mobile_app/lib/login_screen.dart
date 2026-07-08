@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_links/app_links.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import 'main.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,18 +15,69 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _tokenController = TextEditingController();
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
 
-  void _login() async {
-    if (_tokenController.text.trim().isEmpty) return;
-    
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() {
+    _appLinks = AppLinks();
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      if (uri.scheme == 'gmailaiagent' && uri.host == 'auth') {
+        final token = uri.queryParameters['token'];
+        if (token != null && token.isNotEmpty) {
+          _handleSuccessfulLogin(token);
+        }
+      }
+    });
+  }
+
+  void _handleSuccessfulLogin(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jwt_token', _tokenController.text.trim());
+    await prefs.setString('jwt_token', token);
     
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const InboxScreen()),
       );
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _launchGoogleSignIn() async {
+    try {
+      final response = await http.get(Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/auth/google/url?platform=mobile'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final urlStr = data['url'];
+        if (urlStr != null) {
+          final launched = await launchUrl(Uri.parse(urlStr));
+          if (!launched) {
+            throw Exception('Could not launch browser');
+          }
+        }
+      } else {
+        throw Exception('Server returned ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error launching Google Sign-In: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -52,38 +108,68 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                "For security, please sign in via the Web Dashboard and paste your secure Device Sync Token below.", 
+                "Your intelligent, multi-tenant AI email assistant. Sign in to seamlessly sync your inbox across all platforms.", 
                 textAlign: TextAlign.center, 
                 style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5)
               ),
               const SizedBox(height: 48),
-              TextField(
-                controller: _tokenController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: "Paste Device Token...",
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16), 
-                    borderSide: BorderSide.none
+              
+              Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                elevation: 4,
+                child: InkWell(
+                  onTap: _launchGoogleSignIn,
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Custom Google G Logo using basic shapes/colors since we don't have the SVG asset
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "G",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF4285F4),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Text(
+                          "Continue with Google",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 ),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 60),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: const Text("Sync Device Securely", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              )
+              const SizedBox(height: 32),
+              const Text(
+                "By signing in, you agree to our Terms of Service and Privacy Policy.", 
+                textAlign: TextAlign.center, 
+                style: TextStyle(color: Colors.white30, fontSize: 12, height: 1.5)
+              ),
             ],
           ),
         ),

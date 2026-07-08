@@ -735,7 +735,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.event_busy, color: Colors.redAccent, size: 20),
+                  const Icon(Icons.calendar_today, color: Colors.redAccent, size: 20),
                   const SizedBox(width: 8),
                   Text(_fullDeadline, style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w600)),
                 ],
