@@ -268,20 +268,20 @@ function App() {
               <span className="text-[10px] font-bold text-foreground uppercase tracking-tighter">Secure Engine</span>
               <span className="text-[10px] text-secondary font-bold uppercase tracking-tighter">Agent Active</span>
             </div>
-            <Button 
-              onClick={() => setIsAssistantOpen(true)}
-              variant="ai"
-              size="sm"
-              className="gap-2 font-bold text-[11px] uppercase tracking-wider rounded-lg"
-            >
-              <Bot size={16} />
-              <span>Assistant</span>
-            </Button>
           </div>
         </header>
 
         {renderMainContent()}
       </main>
+
+      {/* Floating Chatbot Button */}
+      <button
+        onClick={() => setIsAssistantOpen(true)}
+        className="fixed bottom-8 right-8 z-40 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] transition-all duration-300 group flex items-center justify-center"
+        aria-label="Open AI Assistant"
+      >
+        <Bot size={28} className="group-hover:animate-pulse" />
+      </button>
 
       <AIAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
     </div>

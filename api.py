@@ -15,6 +15,10 @@ import subprocess
 import sys
 from database import get_db_connection
 import psycopg2.extras
+import base64
+from gmail_service import get_gmail_service
+from database import get_db_connection
+import psycopg2.extras
 
 from pydantic import BaseModel
 
@@ -78,6 +82,76 @@ def get_email_details(email_id: str, user_id: str = Depends(get_current_user)):
         
     return data
 
+@app.get("/api/emails/{email_id}/raw")
+def get_raw_email(email_id: str, user_id: str = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT refresh_token FROM users WHERE user_id = %s", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    refresh_token = row[0]
+    try:
+        service = get_gmail_service(refresh_token)
+        msg = service.users().messages().get(userId="me", id=email_id, format="full").execute()
+        payload = msg.get("payload", {})
+        headers = payload.get("headers", [])
+        
+        sender = "Unknown"
+        recipient = "Unknown"
+        date_str = ""
+        subject = ""
+        
+        for h in headers:
+            if h["name"] == "From": sender = h["value"]
+            elif h["name"] == "To": recipient = h["value"]
+            elif h["name"] == "Date": date_str = h["value"]
+            elif h["name"] == "Subject": subject = h["value"]
+            
+        def extract_html(part):
+            mime_type = part.get("mimeType", "")
+            if mime_type == "text/html":
+                data = part.get("body", {}).get("data")
+                if data:
+                    return base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
+            if "parts" in part:
+                for p in part["parts"]:
+                    res = extract_html(p)
+                    if res: return res
+            return None
+            
+        def extract_text(part):
+            mime_type = part.get("mimeType", "")
+            if mime_type == "text/plain":
+                data = part.get("body", {}).get("data")
+                if data:
+                    return base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
+            if "parts" in part:
+                for p in part["parts"]:
+                    res = extract_text(p)
+                    if res: return res
+            return None
+            
+        html_body = extract_html(payload)
+        if not html_body:
+            # Fallback to plain text if HTML doesn't exist
+            html_body = extract_text(payload) or ""
+            # Wrap plain text in a div to preserve line breaks
+            html_body = f"<div style='white-space: pre-wrap; font-family: sans-serif;'>{html_body}</div>"
+            
+        return {
+            "id": email_id,
+            "subject": subject,
+            "sender": sender,
+            "recipient": recipient,
+            "date": date_str,
+            "html": html_body
+        }
+    except Exception as e:
+        print(f"Error fetching raw email: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 @app.get("/api/deadlines")
 def get_deadlines(user_id: str = Depends(get_current_user)):
     return email_memory.get_all_deadlines(user_id, )

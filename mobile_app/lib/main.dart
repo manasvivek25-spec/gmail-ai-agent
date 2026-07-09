@@ -5,7 +5,8 @@ import 'dart:io';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'login_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'login_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -581,6 +582,13 @@ class _InboxScreenState extends State<InboxScreen> {
                 },
               ),
           ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatbotScreen()));
+        },
+        backgroundColor: Colors.indigo,
+        child: const Icon(Icons.smart_toy, color: Colors.white),
+      ),
     );
   }
 }
@@ -598,6 +606,8 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
   bool _showRawEmail = false;
   bool _isLoadingBody = true;
   String _fullBody = 'No body available.';
+  bool _isLoadingRaw = false;
+  Map<String, dynamic>? _rawEmailData;
   String _fullDeadline = 'NONE';
   List<dynamic> _fullTags = [];
   List<dynamic> _fullLabels = [];
@@ -640,6 +650,36 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
     } catch (e) {
       print('Error fetching full email: $e');
       if (mounted) setState(() => _isLoadingBody = false);
+    }
+  }
+
+  Future<void> _fetchRawEmail() async {
+    if (_rawEmailData != null || _isLoadingRaw) return;
+    final emailId = widget.email['email_id'] ?? widget.email['id'];
+    if (emailId == null) return;
+
+    setState(() => _isLoadingRaw = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
+      final response = await http.get(
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails/$emailId/raw'),
+        headers: {
+          'Bypass-Tunnel-Reminder': 'true',
+          'Authorization': 'Bearer $token'
+        },
+      );
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            _rawEmailData = json.decode(response.body);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching raw HTML email: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingRaw = false);
     }
   }
 
@@ -758,6 +798,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                 onPressed: () {
                   setState(() {
                     _showRawEmail = !_showRawEmail;
+                    if (_showRawEmail) {
+                      _fetchRawEmail();
+                    }
                   });
                 },
                 icon: Icon(_showRawEmail ? Icons.visibility_off : Icons.visibility),
@@ -777,21 +820,188 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200)
+                  border: Border.all(color: Colors.grey.shade300)
                 ),
-                child: _isLoadingBody 
+                child: _isLoadingRaw
                   ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
-                  : Text(
-                      _fullBody,
-                      style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87, fontFamily: 'monospace'),
-                    ),
+                  : _rawEmailData != null
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.indigo,
+                                child: Text(
+                                  _rawEmailData!['sender'] != null && _rawEmailData!['sender'].isNotEmpty
+                                      ? _rawEmailData!['sender'].replaceAll(RegExp(r'[^A-Za-z]'), 'A')[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_rawEmailData!['sender'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Text('to ${_rawEmailData!['recipient'] ?? 'me'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                        const SizedBox(width: 6),
+                                        const Text('•', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                        const SizedBox(width: 6),
+                                        Expanded(child: Text(_rawEmailData!['date'] ?? 'Unknown date', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          const Divider(),
+                          const SizedBox(height: 16),
+                          HtmlWidget(
+                            _rawEmailData!['html'] ?? '',
+                            textStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+                            onTapUrl: (url) async {
+                              final uri = Uri.parse(url);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri);
+                              }
+                              return true;
+                            },
+                          ),
+                        ],
+                      )
+                    : const Text('Failed to load raw email data.'),
               ),
             ],
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ChatbotScreen extends StatefulWidget {
+  const ChatbotScreen({super.key});
+
+  @override
+  State<ChatbotScreen> createState() => _ChatbotScreenState();
+}
+
+class _ChatbotScreenState extends State<ChatbotScreen> {
+  final TextEditingController _controller = TextEditingController();
+  final List<Map<String, String>> _messages = [];
+  bool _isLoading = false;
+
+  Future<void> _sendMessage() async {
+    final query = _controller.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _messages.add({'role': 'user', 'content': query});
+      _controller.clear();
+      _isLoading = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
+      
+      final response = await http.post(
+        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/ask'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Bypass-Tunnel-Reminder': 'true',
+        },
+        body: json.encode({'query': query}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _messages.add({'role': 'assistant', 'content': data['response'] ?? 'No response'});
+        });
+      } else {
+        setState(() {
+          _messages.add({'role': 'assistant', 'content': 'Error communicating with AI engine.'});
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _messages.add({'role': 'assistant', 'content': 'Connection error.'});
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('AI Agent Assistant')),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                final isUser = msg['role'] == 'user';
+                return Align(
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser ? Colors.indigo : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16).copyWith(
+                        bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
+                        bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      msg['content']!,
+                      style: TextStyle(color: isUser ? Colors.white : Colors.black87),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (_isLoading) const Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Ask about your emails or deadlines...',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => _sendMessage(),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.indigo),
+                  onPressed: _sendMessage,
+                )
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

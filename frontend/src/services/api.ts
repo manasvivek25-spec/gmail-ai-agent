@@ -13,6 +13,7 @@ axios.interceptors.request.use((config) => {
 export const api = {
   getEmails: () => axios.get(`${API_BASE}/emails`),
   getEmailDetails: (id: string) => axios.get(`${API_BASE}/emails/${id}`),
+  getRawEmail: (id: string) => axios.get(`${API_BASE}/emails/${id}/raw`),
   getDeadlines: () => axios.get(`${API_BASE}/deadlines`),
   getRecommended: () => axios.get(`${API_BASE}/recommended`),
   getCategories: () => axios.get(`${API_BASE}/categories`),

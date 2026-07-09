@@ -6,14 +6,17 @@ import {
   MoreHorizontal,
   Mail,
   Zap,
-  Calendar
+  Calendar,
+  Loader2,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmailDetails } from '@/types';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/services/api';
 
 interface DetailsPanelProps {
   email: EmailDetails | null;
@@ -27,6 +30,18 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
   isBookmarked 
 }) => {
   const [showRawEmail, setShowRawEmail] = useState(false);
+  const [rawEmailData, setRawEmailData] = useState<any>(null);
+  const [isLoadingRaw, setIsLoadingRaw] = useState(false);
+
+  useEffect(() => {
+    if (showRawEmail && !rawEmailData && email?.email_id) {
+      setIsLoadingRaw(true);
+      api.getRawEmail(email.email_id)
+        .then(res => setRawEmailData(res.data))
+        .catch(err => console.error(err))
+        .finally(() => setIsLoadingRaw(false));
+    }
+  }, [showRawEmail, email, rawEmailData]);
   if (!email) {
     return (
       <div className="flex-1 flex items-center justify-center bg-card text-muted-foreground transition-colors duration-300">
@@ -157,12 +172,45 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
         {showRawEmail && (
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
-              <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Original Correspondence</h2>
+              <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Original Gmail Correspondence</h2>
             </div>
             
-            <div className="text-[13px] text-muted-foreground whitespace-pre-wrap leading-relaxed font-sans bg-accent/30 p-8 rounded-xl border border-dashed border-border shadow-inner">
-              {email.body}
-            </div>
+            {isLoadingRaw ? (
+              <div className="flex items-center justify-center p-12 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin" />
+              </div>
+            ) : rawEmailData ? (
+              <div className="bg-white text-black p-8 rounded-xl border border-slate-200 shadow-sm font-sans">
+                {/* Authentic Gmail Header */}
+                <div className="flex items-start justify-between mb-8 pb-6 border-b border-slate-100">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xl uppercase shadow-md">
+                      {rawEmailData.sender ? rawEmailData.sender.charAt(0).replace(/[^A-Za-z]/, 'A') : '?'}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-base mb-1 text-slate-800">
+                        {rawEmailData.sender}
+                      </div>
+                      <div className="text-xs text-slate-500 flex items-center gap-1">
+                        <span>to {rawEmailData.recipient || 'me'}</span>
+                        <span className="text-slate-300 mx-1">•</span>
+                        <span>{rawEmailData.date || 'Unknown date'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Body */}
+                <div 
+                  className="text-sm leading-relaxed max-w-none prose prose-sm prose-slate"
+                  dangerouslySetInnerHTML={{ __html: rawEmailData.html }}
+                />
+              </div>
+            ) : (
+              <div className="text-[13px] text-muted-foreground whitespace-pre-wrap leading-relaxed font-sans bg-accent/30 p-8 rounded-xl border border-dashed border-border shadow-inner">
+                {email.body}
+              </div>
+            )}
           </section>
         )}
 
