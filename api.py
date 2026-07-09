@@ -105,10 +105,11 @@ def get_raw_email(email_id: str, user_id: str = Depends(get_current_user)):
         subject = ""
         
         for h in headers:
-            if h["name"] == "From": sender = h["value"]
-            elif h["name"] == "To": recipient = h["value"]
-            elif h["name"] == "Date": date_str = h["value"]
-            elif h["name"] == "Subject": subject = h["value"]
+            name = h.get("name", "").lower()
+            if name == "from": sender = h["value"]
+            elif name == "to": recipient = h["value"]
+            elif name == "date": date_str = h["value"]
+            elif name == "subject": subject = h["value"]
             
         def extract_html(part):
             mime_type = part.get("mimeType", "")
