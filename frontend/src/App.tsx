@@ -7,7 +7,6 @@ import AIAssistant from './components/AIAssistant';
 import { api } from './services/api';
 import { useEmails, useInitialData } from './hooks/useCommunications';
 import { EmailDetails } from './types';
-import { Button } from './components/ui/button';
 
 import { AnalyticsView } from './components/analytics/AnalyticsView';
 import { DeadlineTracker } from './components/intelligence/DeadlineTracker';

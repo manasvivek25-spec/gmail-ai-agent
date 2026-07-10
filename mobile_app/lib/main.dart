@@ -292,7 +292,9 @@ class _InboxScreenState extends State<InboxScreen> {
       return emails.where((e) => (e['importance'] ?? 0) > 0).toList();
     }
     if (currentView == 'deadlines') {
-      return emails.where((e) => e['deadline'] != null && e['deadline'] != 'NONE' && e['deadline'] != '').toList();
+      final list = emails.where((e) => e['deadline'] != null && e['deadline'] != 'NONE' && e['deadline'] != '').toList();
+      list.sort((a, b) => (a['deadline'] as String).compareTo(b['deadline'] as String));
+      return list;
     }
     if (currentView.startsWith('category:')) {
       final category = currentView.split(':')[1];
@@ -449,42 +451,57 @@ class _InboxScreenState extends State<InboxScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Show bottom sheet with actions
-          showModalBottomSheet(
-            context: context,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-            builder: (context) => Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Intelligent Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  ListTile(
-                    leading: const CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.label, color: Colors.white)),
-                    title: const Text('Create Label'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showCreateLabelDialog();
-                    },
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: "intelligent_actions_btn",
+            onPressed: () {
+              // Show bottom sheet with actions
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                builder: (context) => Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Intelligent Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 20),
+                      ListTile(
+                        leading: const CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.label, color: Colors.white)),
+                        title: const Text('Create Label'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showCreateLabelDialog();
+                        },
+                      ),
+                      ListTile(
+                        leading: const CircleAvatar(backgroundColor: Colors.purpleAccent, child: Icon(Icons.rule, color: Colors.white)),
+                        title: const Text('Create Rule'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showCreateRuleDialog();
+                        },
+                      ),
+                    ],
                   ),
-                  ListTile(
-                    leading: const CircleAvatar(backgroundColor: Colors.purpleAccent, child: Icon(Icons.rule, color: Colors.white)),
-                    title: const Text('Create Rule'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showCreateRuleDialog();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.auto_awesome, color: Colors.white),
+                ),
+              );
+            },
+            backgroundColor: Colors.blueAccent,
+            child: const Icon(Icons.auto_awesome, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: "chatbot_btn",
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatbotScreen()));
+            },
+            backgroundColor: Colors.indigo,
+            child: const Icon(Icons.smart_toy, color: Colors.white),
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -581,14 +598,7 @@ class _InboxScreenState extends State<InboxScreen> {
                   );
                 },
               ),
-          ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatbotScreen()));
-        },
-        backgroundColor: Colors.indigo,
-        child: const Icon(Icons.smart_toy, color: Colors.white),
-      ),
+            ),
     );
   }
 }
@@ -825,7 +835,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                   border: Border.all(color: Colors.grey.shade300)
                 ),
                 child: _isLoadingRaw
-                  ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                  ? Center(child: Padding(padding: const EdgeInsets.all(20), child: CircularProgressIndicator()))
                   : _rawEmailData != null
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -966,8 +976,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     decoration: BoxDecoration(
                       color: isUser ? Colors.indigo : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(16).copyWith(
-                        bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
-                        bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(16),
+                        bottomRight: isUser ? Radius.zero : const Radius.circular(16),
+                        bottomLeft: !isUser ? Radius.zero : const Radius.circular(16),
                       ),
                     ),
                     child: Text(
@@ -979,7 +989,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               },
             ),
           ),
-          if (_isLoading) const Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()),
+          if (_isLoading) Padding(padding: const EdgeInsets.all(8.0), child: CircularProgressIndicator()),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -987,7 +997,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Ask about your emails or deadlines...',
                       border: OutlineInputBorder(),
                     ),

@@ -34,6 +34,10 @@ export const DeadlineTracker: React.FC<DeadlineTrackerProps> = ({ emails, onSele
       else if (diffDays > 7) groups['Later'].push(email);
     });
 
+    Object.values(groups).forEach(items => {
+      items.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+    });
+
     return groups;
   };
 

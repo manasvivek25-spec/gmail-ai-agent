@@ -7,8 +7,7 @@ import {
   Mail,
   Zap,
   Calendar,
-  Loader2,
-  User
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmailDetails } from '@/types';
