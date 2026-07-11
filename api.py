@@ -306,6 +306,20 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
+@app.get("/api/users/me")
+def get_user_profile(user_id: str = Depends(get_current_user)):
+    from database import get_db_connection
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT email FROM users WHERE user_id = %s", (user_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        email = row[0]
+        # Generate a name from the email prefix
+        name = email.split('@')[0].replace('.', ' ').title()
+        return {"id": user_id, "email": email, "name": name}
+
 dist_dir = os.path.join(os.path.dirname(__file__), "frontend", "dist")
 if os.path.exists(dist_dir):
     app.mount("/assets", StaticFiles(directory=os.path.join(dist_dir, "assets")), name="assets")
@@ -319,6 +333,7 @@ if os.path.exists(dist_dir):
         if os.path.isfile(file_path):
             return FileResponse(file_path)
         return FileResponse(os.path.join(dist_dir, "index.html"))
+
 
 if __name__ == "__main__":
     import uvicorn

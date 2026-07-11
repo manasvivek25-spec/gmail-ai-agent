@@ -13,13 +13,18 @@ import {
   Plus,
   Moon,
   Sun,
-  LogOut
+  LogOut,
+  Send,
+  Star,
+  Archive,
+  Trash2,
+  Edit3,
+  Settings
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { CategoryCounts } from '@/types';
-
 
 interface SidebarProps {
   currentView: string;
@@ -31,6 +36,7 @@ interface SidebarProps {
   isDark: boolean;
   toggleTheme: () => void;
   onSignOut?: () => void;
+  userProfile?: {name: string, email: string} | null;
 }
 
 export const NavigationSidebar: React.FC<SidebarProps> = ({ 
@@ -42,169 +48,142 @@ export const NavigationSidebar: React.FC<SidebarProps> = ({
   isSyncing,
   isDark,
   toggleTheme,
-  onSignOut
+  onSignOut,
+  userProfile
 }) => {
-  const NavItem = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
+  const NavItem = ({ id, label, icon: Icon, badge }: { id: string, label: string, icon: any, badge?: number }) => (
     <Button
       variant="ghost"
       className={cn(
-        "w-full justify-start gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:scale-[1.02] active:scale-95 transition-all duration-300",
-        currentView === id && "bg-accent/80 text-foreground font-semibold shadow-sm"
+        "w-full justify-between px-4 py-2.5 hover-float rounded-xl transition-all duration-300 text-sm",
+        currentView === id 
+          ? "bg-[#0EA5E9] text-white font-semibold shadow-lg shadow-sky-500/30" 
+          : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
       )}
       onClick={() => setCurrentView(id)}
     >
-      <Icon size={18} className={cn(currentView === id ? "text-primary drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "text-muted-foreground")} />
-      <span>{label}</span>
+      <div className="flex items-center gap-3">
+        <Icon size={18} className={currentView === id ? "text-white" : "text-slate-400"} />
+        <span>{label}</span>
+      </div>
+      {badge !== undefined && badge > 0 && (
+        <Badge className={cn(
+          "font-bold text-[10px] px-1.5 py-0 h-4 min-w-[16px] flex items-center justify-center rounded-full",
+          currentView === id ? "bg-white text-[#0EA5E9]" : "bg-white/10 text-slate-300"
+        )}>
+          {badge}
+        </Badge>
+      )}
     </Button>
   );
 
+  const getLabelColor = (index: number) => {
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-purple-500', 'bg-pink-500'];
+    return colors[index % colors.length];
+  };
+
   return (
-    <div className="w-[280px] h-screen bg-background/60 backdrop-blur-2xl border-r border-border flex flex-col p-4 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-20 transition-colors duration-300">
-      <div className="flex items-center justify-between px-3 pt-4 pb-2">
+    <div className="w-[280px] h-screen bg-[#0B1120] border-r border-[#1e293b] flex flex-col p-4 shadow-2xl z-20 transition-colors duration-300">
+      <div className="flex items-center justify-between px-2 pt-2 pb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
+          <div className="bg-[#0EA5E9] p-2 rounded-full shadow-lg shadow-sky-500/20">
             <Mail className="text-white" size={20} />
           </div>
-          <h1 className="font-bold text-foreground tracking-tight text-lg">Mail Agent</h1>
+          <div>
+            <h1 className="font-bold text-white tracking-tight text-lg leading-tight">Mail Agent</h1>
+            <p className="text-[9px] text-slate-400 font-medium tracking-widest uppercase">AI-Powered Inbox</p>
+          </div>
         </div>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={toggleTheme}>
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </Button>
       </div>
       
-      {/* Multi-Channel Switcher UI (Phase 6) */}
-      <div className="px-3 pb-6 flex gap-1 overflow-x-auto custom-scrollbar">
-        <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors">
-          <Mail size={12} /> Gmail
-        </button>
-        <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-400 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors cursor-not-allowed opacity-50" title="Coming Soon">
-          <Mail size={12} /> Outlook
-        </button>
-        <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-400 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors cursor-not-allowed opacity-50" title="Coming Soon">
-          <MessageCircle size={12} /> WhatsApp
-        </button>
-        <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-400 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors cursor-not-allowed opacity-50" title="Coming Soon">
-          <Smartphone size={12} /> Telegram
-        </button>
+      {/* New Email Button */}
+      <div className="px-2 mb-6">
+        <Button className="w-full justify-center gap-2 bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-xl py-6 font-semibold shadow-lg shadow-sky-500/20 hover-float">
+          <Edit3 size={18} />
+          New Email
+        </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-1">
+      <div className="flex-1 overflow-y-auto space-y-6 sidebar-scrollbar pr-2">
         <div className="space-y-1">
-          <NavItem id="inbox" label="Inbox" icon={Inbox} />
-          <NavItem id="analytics" label="Analytics" icon={BarChart2} />
-          <NavItem id="assistant" label="AI Assistant" icon={MessageSquare} />
+          <NavItem id="inbox" label="Inbox" icon={Inbox} badge={12} />
+          <NavItem id="sent" label="Sent" icon={Send} />
+          <NavItem id="starred" label="Starred" icon={Star} badge={3} />
+          <NavItem id="archive" label="Archive" icon={Archive} />
+          <NavItem id="trash" label="Trash" icon={Trash2} />
         </div>
 
         <div>
-          <h2 className="px-3 text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Smart Categories</h2>
+          <h2 className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">AI Tools</h2>
           <div className="space-y-1">
-            <NavItem id="recommended" label="Recommended" icon={Flame} />
-            <NavItem id="deadlines" label="Deadlines" icon={Calendar} />
-            {Object.entries(categories).map(([name, count]) => (
+            <NavItem id="assistant" label="AI Compose" icon={MessageSquare} />
+            <NavItem id="analytics" label="Analytics" icon={BarChart2} />
+            <NavItem id="recommended" label="Automation" icon={Flame} />
+          </div>
+        </div>
+
+        <div>
+          <h2 className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Labels</h2>
+          <div className="space-y-1">
+            {labels.length > 0 ? labels.map((label, index) => (
               <Button
-                key={name}
+                key={label}
                 variant="ghost"
                 className={cn(
-                  "w-full justify-between px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:scale-[1.02] active:scale-95 transition-all duration-300 text-sm",
-                  currentView === `category:${name}` && "bg-accent/80 text-foreground font-semibold shadow-sm"
+                  "w-full justify-start gap-3 px-4 py-2 hover-float rounded-xl transition-all duration-300 text-sm",
+                  currentView === `label:${label}` 
+                    ? "bg-[#0EA5E9] text-white font-semibold shadow-lg shadow-sky-500/30" 
+                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                 )}
-                onClick={() => setCurrentView(`category:${name}`)}
+                onClick={() => setCurrentView(`label:${label}`)}
               >
-                <span className="truncate">{name}</span>
-                <Badge variant="secondary" className="font-medium text-[10px] px-1.5 py-0 bg-background/50">
-                  {count}
-                </Badge>
+                <div className={`w-2 h-2 rounded-full ${getLabelColor(index)}`}></div>
+                <span className="truncate">{label}</span>
               </Button>
-            ))}
-          </div>
-        </div>
-
-        {labels.length > 0 && (
-          <div>
-            <h2 className="px-3 text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Labels</h2>
-            <div className="space-y-1">
-              {labels.map((label) => (
-                <Button
-                  key={label}
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:scale-[1.02] active:scale-95 transition-all duration-300 text-sm",
-                    currentView === `label:${label}` && "bg-accent/80 text-foreground font-semibold shadow-sm"
-                  )}
-                  onClick={() => setCurrentView(`label:${label}`)}
-                >
-                  <Tag size={16} className={currentView === `label:${label}` ? "text-primary" : "text-muted-foreground"} />
-                  <span className="truncate">{label}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Actions Section */}
-        <div>
-          <h2 className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-4">Actions</h2>
-          <div className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 px-3 py-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 text-sm font-medium"
-              onClick={async () => {
-                const name = window.prompt("Enter new label name:");
-                if (name) {
-                  await fetch("http://localhost:8000/api/labels/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name })
-                  });
-                  onSync(); // Refresh data
-                }
-              }}
-            >
-              <Plus size={16} />
-              <span>Create Label</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 px-3 py-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 text-sm font-medium"
-              onClick={async () => {
-                const label = window.prompt("Enter existing label to assign rule to:");
-                if (!label) return;
-                const keyword = window.prompt(`Enter keyword to route to '${label}':`);
-                if (keyword) {
-                  await fetch("http://localhost:8000/api/rules/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ label, keyword })
-                  });
-                  onSync(); // Refresh data
-                }
-              }}
-            >
-              <Plus size={16} />
-              <span>Create Rule</span>
-            </Button>
+            )) : (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 px-4 py-2 hover-float rounded-xl transition-all duration-300 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                onClick={async () => {
+                  const name = window.prompt("Enter new label name:");
+                  if (name) {
+                    await fetch("http://localhost:8000/api/labels/create", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name })
+                    });
+                    onSync();
+                  }
+                }}
+              >
+                <Plus size={16} />
+                <span>Create Label</span>
+              </Button>
+            )}
+            
+            <NavItem id="deadlines" label="Deadlines" icon={Calendar} />
           </div>
         </div>
       </div>
 
-      <div className="mt-auto pt-4 border-t border-slate-200 space-y-2">
-        <Button 
-          variant="outline" 
-          className="w-full justify-center gap-2 text-slate-600 bg-white"
-          onClick={onSync}
-          disabled={isSyncing}
-        >
-          <RefreshCw size={16} className={cn(isSyncing && "animate-spin")} />
-          <span>{isSyncing ? "Syncing AI..." : "Sync Agent"}</span>
-        </Button>
+      <div className="mt-4 pt-4 border-t border-[#1e293b] flex items-center justify-between px-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#0EA5E9] flex items-center justify-center text-white font-bold text-sm shadow-inner">
+            {userProfile ? userProfile.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-white text-sm font-semibold leading-tight truncate max-w-[130px]">{userProfile ? userProfile.name : 'User'}</span>
+            <span className="text-slate-400 text-[10px] truncate max-w-[130px]">{userProfile ? userProfile.email : 'Loading...'}</span>
+          </div>
+        </div>
         {onSignOut && (
           <Button 
             variant="ghost" 
-            className="w-full justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+            size="icon"
+            className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full hover-float"
             onClick={onSignOut}
           >
-            <LogOut size={16} />
-            <span>Sign Out</span>
+            <Settings size={16} />
           </Button>
         )}
       </div>

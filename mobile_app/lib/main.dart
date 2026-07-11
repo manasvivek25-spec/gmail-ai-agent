@@ -12,6 +12,8 @@ import 'login_screen.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+final String BASE_URL = 'https://gmail-ai-agent-ih4e.onrender.com';
+
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -636,7 +638,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
-        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails/$emailId'),
+        Uri.parse('${BASE_URL}/api/emails/$emailId'),
         headers: {
           'Bypass-Tunnel-Reminder': 'true',
           'Authorization': 'Bearer $token'
@@ -673,7 +675,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       final response = await http.get(
-        Uri.parse('https://gmail-ai-agent-ih4e.onrender.com/api/emails/$emailId/raw'),
+        Uri.parse('${BASE_URL}/api/emails/$emailId/raw'),
         headers: {
           'Bypass-Tunnel-Reminder': 'true',
           'Authorization': 'Bearer $token'

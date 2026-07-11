@@ -26,4 +26,5 @@ export const api = {
   search: (query: string) => axios.post(`${API_BASE}/search`, { query }),
   ask: (query: string) => axios.post(`${API_BASE}/ask`, { query }),
   refresh: () => axios.post(`${API_BASE}/refresh`),
+  getUserProfile: () => axios.get(`${API_BASE}/users/me`),
 };

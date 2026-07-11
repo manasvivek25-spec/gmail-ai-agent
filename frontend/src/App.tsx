@@ -21,6 +21,17 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [userProfile, setUserProfile] = useState<{name: string, email: string} | null>(null);
+
+  useEffect(() => {
+    if (token) {
+      api.getUserProfile().then(res => {
+        if (res.data && typeof res.data === 'object' && 'name' in res.data) {
+          setUserProfile(res.data);
+        }
+      }).catch(console.error);
+    }
+  }, [token]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -134,10 +145,24 @@ function App() {
     return (
       <div className="flex-1 flex overflow-hidden">
         {/* Inbox List */}
-        <div className="w-[380px] border-r border-border flex flex-col bg-card shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)] z-10 transition-colors duration-300">
-          <div className="p-4 flex justify-between items-center border-b border-border bg-card/50 backdrop-blur-sm">
-            <h2 className="font-bold text-foreground text-[11px] uppercase tracking-[0.2em]">{currentView.replace(':', ' ')}</h2>
-            <span className="text-[10px] bg-accent px-2 py-0.5 rounded text-muted-foreground font-bold">{emails.length} Items</span>
+        <div className="w-[380px] border-r border-slate-200 flex flex-col bg-white z-10 transition-colors duration-300">
+          <div className="p-4 flex flex-col border-b border-slate-100 bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-bold text-slate-800 text-xl tracking-tight capitalize">
+                {currentView.split(':')[1] || currentView.replace(':', ' ')}
+              </h2>
+              <span className="text-[10px] bg-[#0EA5E9] text-white px-2 py-0.5 rounded-full font-bold shadow-sm">
+                {emails.filter(e => !e.is_read).length || emails.length} new
+              </span>
+            </div>
+            
+            {/* Tabs */}
+            <div className="flex items-center gap-1 bg-slate-50/50 p-1 rounded-lg border border-slate-100">
+              <button className="flex-1 text-[11px] font-semibold bg-white text-[#0EA5E9] py-1.5 rounded-md shadow-sm border border-slate-200">All</button>
+              <button className="flex-1 text-[11px] font-semibold text-slate-500 hover:text-slate-700 py-1.5 rounded-md">Unread</button>
+              <button className="flex-1 text-[11px] font-semibold text-slate-500 hover:text-slate-700 py-1.5 rounded-md">Starred</button>
+              <button className="flex-1 text-[11px] font-semibold text-slate-500 hover:text-slate-700 py-1.5 rounded-md">Attachments</button>
+            </div>
           </div>
           
           <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -236,15 +261,20 @@ function App() {
         isDark={isDark}
         toggleTheme={() => setIsDark(!isDark)}
         onSignOut={handleSignOut}
+        userProfile={userProfile}
       />
 
-      <main className="flex-1 flex flex-col min-w-0 bg-card">
-        <header className="h-16 border-b border-border bg-card/80 backdrop-blur flex items-center justify-between px-8 z-10 transition-colors duration-300">
-          <div className="flex-1 max-w-xl relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+      <main className="flex-1 flex flex-col min-w-0 bg-white">
+        <header className="h-16 border-b border-slate-100 bg-white flex items-center justify-between px-6 z-10">
+          <div className="flex items-center gap-4 text-sm font-semibold text-slate-700 w-32">
+            <span className="capitalize">{currentView.split(':')[1] || currentView.replace(':', ' ')}</span>
+          </div>
+          
+          <div className="flex-1 max-w-lg mx-6 relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0EA5E9] transition-colors" size={16} />
             <input 
               type="text" 
-              placeholder="Search communications..."
+              placeholder="Search emails..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -254,18 +284,29 @@ function App() {
                   setCurrentView('inbox');
                 }
               }}
-              className="w-full bg-accent/50 border border-transparent rounded-lg py-2 pl-10 pr-4 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 focus:bg-background focus:border-primary/20 transition-all placeholder:text-muted-foreground font-medium text-foreground"
+              className="w-full bg-slate-50 border border-slate-200 rounded-full py-2 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/20 focus:border-[#0EA5E9] transition-all placeholder:text-slate-400 font-medium text-slate-700"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground/50">
-              <Command size={10} />
-              <span className="text-[10px] font-bold">K</span>
-            </div>
           </div>
           
-          <div className="flex items-center gap-4 ml-8">
-            <div className="hidden md:flex flex-col items-end mr-2">
-              <span className="text-[10px] font-bold text-foreground uppercase tracking-tighter">Secure Engine</span>
-              <span className="text-[10px] text-secondary font-bold uppercase tracking-tighter">Agent Active</span>
+          <div className="flex items-center gap-5 justify-end w-64">
+            <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-100 hover-float cursor-pointer shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-[11px] font-bold text-green-700 uppercase tracking-tight">AI Active</span>
+            </div>
+            
+            <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors hover-float">
+              <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            
+            <div className="flex items-center gap-2 pl-5 border-l border-slate-200">
+              <div className="w-8 h-8 rounded-full bg-[#0EA5E9] flex items-center justify-center text-white font-bold text-xs shadow-sm cursor-pointer hover-float">
+                {userProfile ? userProfile.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
+              </div>
+              <div className="hidden xl:flex flex-col">
+                <span className="text-[12px] font-bold text-slate-800 leading-tight truncate max-w-[120px]">{userProfile ? userProfile.name : 'User'}</span>
+                <span className="text-[10px] text-slate-400 font-medium truncate max-w-[120px]">{userProfile ? userProfile.email : 'Loading...'}</span>
+              </div>
             </div>
           </div>
         </header>
