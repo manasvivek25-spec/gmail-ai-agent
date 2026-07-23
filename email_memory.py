@@ -673,13 +673,16 @@ def get_all_emails_metadata(user_id, limit=50):
     emails = []
     for row in rows:
         ts = row[3]
-        time_str = str(ts)
-        if isinstance(ts, (int, float)):
+        time_str = "Unknown time"
+        if ts is not None and isinstance(ts, (int, float)):
             try:
                 # Gmail timestamps are often in milliseconds
                 if ts > 10**11:
                     ts = ts / 1000
-                time_str = datetime.fromtimestamp(ts).strftime("%d %b, %H:%M")
+                # Render servers run in UTC. Manually offset to IST (+5:30)
+                from datetime import timezone, timedelta
+                ist = timezone(timedelta(hours=5, minutes=30))
+                time_str = datetime.fromtimestamp(ts, tz=ist).strftime("%d %b, %H:%M")
             except Exception as e:
                 print(f"Timestamp error: {e} for value {ts}")
         
@@ -726,13 +729,16 @@ def get_emails_metadata_by_ids(user_id, email_ids):
     emails = []
     for row in rows:
         ts = row[3]
-        time_str = str(ts)
-        if isinstance(ts, (int, float)):
+        time_str = "Unknown time"
+        if ts is not None and isinstance(ts, (int, float)):
             try:
                 # Gmail timestamps are often in milliseconds
                 if ts > 10**11:
                     ts = ts / 1000
-                time_str = datetime.fromtimestamp(ts).strftime("%d %b, %H:%M")
+                # Render servers run in UTC. Manually offset to IST (+5:30)
+                from datetime import timezone, timedelta
+                ist = timezone(timedelta(hours=5, minutes=30))
+                time_str = datetime.fromtimestamp(ts, tz=ist).strftime("%d %b, %H:%M")
             except Exception as e:
                 print(f"Timestamp error: {e} for value {ts}")
         
